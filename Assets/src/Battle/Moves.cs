@@ -26,25 +26,25 @@ class Moves
             case Move.Move:
                 action = new Action();
                 action.TargetType = TargetType.Position;
-                action.Range = new RangeDistance(3);
-                action.GroundEffects.Add(new EffectMove());
+                action.Range = new DistanceRange(3);
+                action.GroundEffects.Add(new MoveEffect());
                 break;
 
             case Move.Tackle:
                 action = new Action();
                 action.TargetType = TargetType.Position;
-                action.Range = new RangeDistance(2);
-                action.AreaOfEffect = new AreaOfEffectDistance(1);
-                action.HitEffects.Add(new EffectDamage(40));
+                action.Range = new DistanceRange(2);
+                action.AreaOfEffect = new DistanceAreaOfEffect(1);
+                action.HitEffects.Add(new DamageEffect(40));
                 break;
 
             case Move.Gust:
                 action = new Action();
                 action.TargetType = TargetType.Directional;
-                action.Range = new RangeLine(2);
-                action.AreaOfEffect = new AreaOfEffectLine(4);
-                action.HitEffects.Add(new EffectPush(1));
-                action.HitEffects.Add(new EffectDamage(50));
+                action.Range = new LineRange(2);
+                action.AreaOfEffect = new LineAreaOfEffect(4);
+                action.HitEffects.Add(new PushEffect(1));
+                action.HitEffects.Add(new DamageEffect(50));
                 break;
             default:
                 Debug.Log("ne doit pas arriver");

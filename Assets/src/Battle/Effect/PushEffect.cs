@@ -4,11 +4,11 @@ using System.Linq;
 using System.Text;
 
 
-class EffectPush : HitEffect
+class PushEffect : HitEffect
 {
     public int Dist { get; private set; }
 
-    public EffectPush(int dist)
+    public PushEffect(int dist)
     {
         Dist = dist;
     }

@@ -4,20 +4,20 @@ using System.Linq;
 using System.Text;
 
 
-class RangeDistance : Range
+class DistanceAreaOfEffect : AreaOfEffect
 {
     public int Dist { get; private set; }
 
-    public RangeDistance(int dist)
+    public DistanceAreaOfEffect(int dist)
     {
         Dist = dist;
-        MaxRange = dist;
+        MaxArea = dist;
     }
 
-    override public bool InRange(Position origin, Position target, Direction dir)
+    public override bool InArea(Position origin, Position target, Direction dir)
     {
         var dist = Math.Abs(origin.X - target.X) + Math.Abs(origin.Y - target.Y);
-        if (dist <= Dist && dist != 0)
+        if (dist <= Dist)
         {
             return true;
         }

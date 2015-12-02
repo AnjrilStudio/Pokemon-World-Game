@@ -4,11 +4,11 @@ using System.Linq;
 using System.Text;
 
 
-class EffectMove : GroundEffect
+class MoveEffect : GroundEffect
 {
     public int Dist { get; private set; }
 
-    public EffectMove()
+    public MoveEffect()
     {
     }
 

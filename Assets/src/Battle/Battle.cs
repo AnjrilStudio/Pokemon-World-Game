@@ -30,6 +30,8 @@ public class Battle : MonoBehaviour
     // Use this for initialization
     void Start()
     {
+        //todo recevoir les infos du serveur
+
         mouseTilePos = new Position(0, 0);
 
         arena = new Arena(0.32f, mapsize);
@@ -64,6 +66,7 @@ public class Battle : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        //todo recevoir les mises à jour du serveur
         //turn play
         BattleEntity turn = turns[currentTurn];
         if (turn.HP == 0)
@@ -142,6 +145,7 @@ public class Battle : MonoBehaviour
 
         if (turn.AI)
         {
+            //côté serveur
             AITurnTime += Time.deltaTime;
             if (AITurnTime > 1f)
             {
@@ -204,6 +208,8 @@ public class Battle : MonoBehaviour
 
     private void PlayTurn(BattleEntity turn, Position target, Action action, Direction dir)
     {
+        //côté serveur
+        //todo envoyer les paramètres au serveur
         if (action.Range.InRange(turn.CurrentPos, target)){
             foreach(GroundEffect effect in action.GroundEffects)
             {

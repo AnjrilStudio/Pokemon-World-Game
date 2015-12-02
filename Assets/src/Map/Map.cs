@@ -61,6 +61,7 @@ public class Map : MonoBehaviour {
 
         if (ApplicationModel.playerBattleStartPos == null)
         {
+            //recevoir la position depuis le serveur à la connexion
             position = new Position(200, 200);
         } else {
             position = ApplicationModel.playerBattleStartPos;
@@ -69,6 +70,7 @@ public class Map : MonoBehaviour {
 
         var entitiesNode = GameObject.FindGameObjectWithTag("Entities");
 
+        //temporaire, à faire quand on reçoit la map du serveur
         //spawn player
         var playerObj = GameObject.Instantiate(Resources.Load("player")) as GameObject;
         playerObj.transform.position = new Vector3(position.X * tilesize, -position.Y * tilesize, 0);
@@ -123,10 +125,12 @@ public class Map : MonoBehaviour {
         }
 
         moveEntity(player, posX, posY);
+        //todo gérer le déplacement serveur
 
         Vector3 playerPosition = player.Object.transform.position;
         gameObject.transform.position = new Vector3(playerPosition.x, playerPosition.y, gameObject.transform.position.z);
 
+        //todo recevoir la map du serveur
         //todo partir de current - (renderdistance + 1)
         for (int x = 0; x < mapsize; x++)
         {
@@ -146,6 +150,7 @@ public class Map : MonoBehaviour {
         
     }
 
+    //todo gérer l'animation
     private void moveEntity(MapEntity entity, int x, int y)
     {
         if (entity.CurrentPos.X != x || entity.CurrentPos.Y != y)
@@ -160,6 +165,7 @@ public class Map : MonoBehaviour {
             }
             else
             {
+                //à recevoir du serveur
                 ApplicationModel.otherBattleStartEntities.Clear();
                 ApplicationModel.otherBattleStartEntities.Add(entityMatrix[x, y]);
                 ApplicationModel.playerBattleStartEntity = entity;

@@ -4,13 +4,13 @@ using System.Linq;
 using System.Text;
 
 
-class EffectStatus : HitEffect
+class StatusEffect : HitEffect
 {
     private Random rnd = new Random();
     public int Chance { get; private set; }
     public Status Status;
 
-    public EffectStatus(int chance, Status status)
+    public StatusEffect(int chance, Status status)
     {
         Chance = chance;
         Status = status;

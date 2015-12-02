@@ -4,12 +4,12 @@ using System.Linq;
 using System.Text;
 
 
-class EffectDamage : HitEffect
+class DamageEffect : HitEffect
 {
     private Random rnd = new Random();
     public int Value { get; private set; }
 
-    public EffectDamage(int value)
+    public DamageEffect(int value)
     {
         Value = value;
     }

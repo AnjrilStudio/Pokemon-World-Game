@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 
 
-abstract class RangeDirectional : Range
+abstract class DirectionalRange : Range
 {
     public override bool InRange(Position origin, Position target)
     {

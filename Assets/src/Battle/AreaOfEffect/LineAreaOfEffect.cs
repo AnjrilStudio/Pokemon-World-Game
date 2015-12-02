@@ -4,11 +4,11 @@ using System.Linq;
 using System.Text;
 
 
-class AreaOfEffectLine : AreaOfEffect
+class LineAreaOfEffect : AreaOfEffect
 {
     public int Dist { get; private set; }
 
-    public AreaOfEffectLine(int dist)
+    public LineAreaOfEffect(int dist)
     {
         Dist = dist;
         MaxArea = dist;

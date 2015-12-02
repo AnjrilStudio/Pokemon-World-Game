@@ -4,11 +4,11 @@ using System.Linq;
 using System.Text;
 
 
-class RangeLine : RangeDirectional
+class LineRange : DirectionalRange
 {
     public int Dist { get; private set; }
 
-    public RangeLine(int dist)
+    public LineRange(int dist)
     {
         Dist = dist;
         MaxRange = dist;

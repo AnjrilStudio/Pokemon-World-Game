@@ -15,8 +15,9 @@ class LineRange : DirectionalRange
     }
     
 
-    public override bool InRange(Position origin, Position target, Direction dir)
+    public override bool InRange(BattleEntity self, Position target, Direction dir)
     {
+        var origin = self.CurrentPos;
         switch (dir)
         {
             case Direction.Up:

@@ -14,8 +14,9 @@ class DistanceRange : Range
         MaxRange = dist;
     }
 
-    override public bool InRange(Position origin, Position target, Direction dir)
+    public override bool InRange(BattleEntity self, Position target, Direction dir)
     {
+        var origin = self.CurrentPos;
         var dist = Math.Abs(origin.X - target.X) + Math.Abs(origin.Y - target.Y);
         if (dist <= Dist && dist != 0)
         {

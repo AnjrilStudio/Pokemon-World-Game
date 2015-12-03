@@ -72,6 +72,11 @@ class Position
         return new Position(x, y);
     }
 
+    public static int Distance(Position p1, Position p2)
+    {
+        return Math.Abs(p1.X - p2.X) + Math.Abs(p1.Y - p2.Y);
+    }
+
     public override string ToString()
     {
         return "Position: " + X + " " + Y;

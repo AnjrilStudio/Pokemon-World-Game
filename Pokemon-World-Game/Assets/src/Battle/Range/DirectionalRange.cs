@@ -6,11 +6,11 @@ using System.Text;
 
 abstract class DirectionalRange : Range
 {
-    public override bool InRange(Position origin, Position target)
+    public override bool InRange(BattleEntity self, Position target)
     {
         foreach (Direction dir in Enum.GetValues(typeof(Direction)))
         {
-            if (InRange(origin, target, dir))
+            if (InRange(self, target, dir))
             {
                 return true;
             }

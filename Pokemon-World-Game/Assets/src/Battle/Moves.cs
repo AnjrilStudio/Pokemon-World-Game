@@ -26,8 +26,11 @@ class Moves
             case Move.Move:
                 action = new Action();
                 action.TargetType = TargetType.Position;
-                action.Range = new DistanceRange(3);
+                action.Range = new DistanceMPRange(1);
+                action.Range2 = new DistanceMPAPRange(1);
                 action.GroundEffects.Add(new MoveEffect());
+                action.ActionCost = new MPAPDistanceActionCost(1);
+                action.NextTurn = false;
                 break;
 
             case Move.Tackle:

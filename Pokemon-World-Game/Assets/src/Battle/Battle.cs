@@ -36,11 +36,14 @@ public class Battle : MonoBehaviour
 
         arena = new Arena(0.32f, mapsize);
         turns = new List<BattleEntity>();
+        BattleEntity playerTurn = null;
 
         if (ApplicationModel.playerBattleStartEntity != null)
         {
             Pokemon playerPkmn = ApplicationModel.playerBattleStartEntity.Pokemons[0];
-            turns.Add(initPokemon(playerPkmn, false));
+            playerTurn = initPokemon(playerPkmn, false);
+            turns.Add(playerTurn);
+
             foreach (MapEntity other in ApplicationModel.otherBattleStartEntities)
             {
                 turns.Add(initPokemon(other.Pokemons[0], true));
@@ -48,7 +51,8 @@ public class Battle : MonoBehaviour
         } else
         {
             //tmp
-            turns.Add(initPokemon(new Pokemon(1, 5), false));
+            playerTurn = initPokemon(new Pokemon(1, 5), false);
+            turns.Add(playerTurn);
             turns.Add(initPokemon(new Pokemon(2, 5), true));
         }
 
@@ -61,6 +65,9 @@ public class Battle : MonoBehaviour
         highlightAOE = new List<GameObject>();
 
         displayGUI();
+        
+        currentAction = playerTurn.Actions[0];
+        HighlightAction(playerTurn, currentAction, playerTurn.CurrentPos);
     }
 
     // Update is called once per frame
@@ -77,6 +84,7 @@ public class Battle : MonoBehaviour
 
 
         bool inRange = false;
+        bool inRange2 = false;
 
         //pointer control
         Camera camera = GetComponent<Camera>();
@@ -109,14 +117,17 @@ public class Battle : MonoBehaviour
             if (currentAction != null)
             {
                 //aoe
-                Position origin = turn.CurrentPos;
                 Position target = mouseTilePos;
                 if (currentAction.TargetType == TargetType.Position)
                 {
                     currentActionDir = Direction.None;
-                    if (currentAction.Range.InRange(origin, target))
+                    if (currentAction.Range.InRange(turn, target))
                     {
                         inRange = true;
+                    }
+                    if (currentAction.Range2 != null && currentAction.Range2.InRange(turn, target))
+                    {
+                        inRange2 = true;
                     }
                 }
 
@@ -124,15 +135,19 @@ public class Battle : MonoBehaviour
                 {
                     foreach (Direction dir in Enum.GetValues(typeof(Direction)))
                     {
-                        if (currentAction.Range.InRange(origin, target, dir))
+                        if (currentAction.Range.InRange(turn, target, dir))
                         {
                             currentActionDir = dir;
                             inRange = true;
-                            break;
+                        }
+                        if (currentAction.Range2 != null && currentAction.Range2.InRange(turn, target, dir))
+                        {
+                            currentActionDir = dir;
+                            inRange2 = true;
                         }
                     }
                 }
-                if (inRange)
+                if (inRange || inRange2)
                 {
                     HighlightAOE(turn, currentAction, target, currentActionDir);
                 }
@@ -155,20 +170,22 @@ public class Battle : MonoBehaviour
 
                 if (actionAI.TargetType == TargetType.Position)
                 {
-                    List<Position> targets = actionAI.getInRangeTiles(turn);
+                    List<Position> targets = actionAI.InRangeTiles(turn);
                     targetPos = targets[UnityEngine.Random.Range(0, targets.Count)];
                 }
 
                 if (actionAI.TargetType == TargetType.Directional)
                 {
                     dir = (Direction)UnityEngine.Random.Range(1, 5);
-                    List<Position> targets = actionAI.getInRangeTiles(turn, dir);
+                    List<Position> targets = actionAI.InRangeTiles(turn, dir);
                     targetPos = targets[UnityEngine.Random.Range(0, targets.Count)];
                 }
 
                 PlayTurn(turn, targetPos, actionAI, dir);
                 AITurnTime = 0;
                 currentTurn = (currentTurn + 1) % turns.Count;
+                turns[currentTurn].MP = turns[currentTurn].MaxMP;
+                turns[currentTurn].MP = turns[currentTurn].MaxAP;
                 displayGUI();
             }
         }
@@ -197,11 +214,16 @@ public class Battle : MonoBehaviour
             }
             
             //click control
-            if (inRange && Input.GetMouseButtonDown(0) && hover.activeSelf && currentAction != null)
+            if ((inRange || inRange2) && Input.GetMouseButtonDown(0) && hover.activeSelf && currentAction != null)
             {
                 PlayTurn(turns[currentTurn], mouseTilePos, currentAction, currentActionDir);
-                currentTurn = (currentTurn + 1) % turns.Count;
-                displayGUI();
+                if (currentAction.NextTurn)
+                {
+                    currentTurn = (currentTurn + 1) % turns.Count; //todo methode nextturn
+                    turns[currentTurn].MP = turns[currentTurn].MaxMP;
+                    turns[currentTurn].MP = turns[currentTurn].MaxAP;
+                    displayGUI();
+                }
             }
         }
     }
@@ -210,13 +232,25 @@ public class Battle : MonoBehaviour
     {
         //côté serveur
         //todo envoyer les paramètres au serveur
-        if (action.Range.InRange(turn.CurrentPos, target)){
-            foreach(GroundEffect effect in action.GroundEffects)
+        bool inRange = action.Range.InRange(turn, target);
+        if (action.Range2 != null && action.Range2.InRange(turn, target))
+        {
+            inRange = true;
+        }
+        
+        if (inRange)
+        {
+            if (action.ActionCost != null)
+            {
+                action.ActionCost.ApplyCost(turn, target);
+            }
+
+            foreach (GroundEffect effect in action.GroundEffects)
             {
                 effect.apply(turn, target, dir);
             }
             
-            foreach(Position aoe in action.getAoeTiles(turn, target, dir))
+            foreach(Position aoe in action.AoeTiles(turn, target, dir))
             {
                 foreach (BattleEntity pokemon in turns)
                 {
@@ -248,9 +282,16 @@ public class Battle : MonoBehaviour
         }
         highlightRange.Clear();
 
-        foreach (Position target in action.getInRangeTiles(self))
+        foreach (Position target in action.InRangeTiles(self))
         {
             var highlight = GameObject.Instantiate(Resources.Load("highlight")) as GameObject;
+            highlight.transform.position = new Vector3(tilesize * target.X, -tilesize * target.Y, 0);
+            highlightRange.Add(highlight);
+        }
+
+        foreach (Position target in action.InRange2Tiles(self))
+        {
+            var highlight = GameObject.Instantiate(Resources.Load("highlight2")) as GameObject;
             highlight.transform.position = new Vector3(tilesize * target.X, -tilesize * target.Y, 0);
             highlightRange.Add(highlight);
         }
@@ -258,7 +299,7 @@ public class Battle : MonoBehaviour
 
     private void HighlightAOE(BattleEntity self, Action action, Position target, Direction dir)
     {
-        foreach (Position aoe in action.getAoeTiles(self, target, dir))
+        foreach (Position aoe in action.AoeTiles(self, target, dir))
         {
             var aoeObj = GameObject.Instantiate(Resources.Load("aoe")) as GameObject;
             aoeObj.transform.position = new Vector3(tilesize * aoe.X, -tilesize * aoe.Y, 0);

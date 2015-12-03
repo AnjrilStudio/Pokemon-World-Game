@@ -22,6 +22,11 @@ class BattleEntity
     public int DefSpe { get; set; }
     public int Vit { get; set; }
 
+    public int AP { get; set; }
+    public int MaxAP { get; set; }
+    public int MP { get; set; }
+    public int MaxMP { get; set; }
+
 
     public BattleEntity(Arena arena, GameObject pokemon, bool ai)
     {
@@ -39,6 +44,11 @@ class BattleEntity
         AtkSpe = 15;
         DefSpe = 15;
         Vit = 15;
+
+        MaxAP = 4;
+        AP = MaxAP;
+        MaxMP = 3;
+        MP = MaxMP;
     }
     
     public void MoveBattleEntity(Position target)

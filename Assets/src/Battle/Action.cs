@@ -8,57 +8,46 @@ class Action
 {
     public TargetType TargetType;
     public Range Range { get; set; }
+    public Range Range2 { get; set; }
     public AreaOfEffect AreaOfEffect;
     public List<HitEffect> HitEffects { get; private set; }
     public List<GroundEffect> GroundEffects { get; private set; }
+    public ActionCost ActionCost { get; set; }
+    public bool NextTurn { get; set; }
 
     public Action()
     {
         TargetType = TargetType.None;
         HitEffects = new List<HitEffect>();
         GroundEffects = new List<GroundEffect>();
+        NextTurn = true;
     }
 
-    public List<Position> getInRangeTiles(BattleEntity self, Direction dir)
+    public List<Position> InRangeTiles(BattleEntity self, Direction dir)
     {
-        var result = new List<Position>();
+        return Range.InRangeTiles(self, dir);
+    }
 
-        int startX = Position.NormalizedPos(self.CurrentPos.X - Range.MaxRange, self.Arena.Mapsize);
-        int endX = Position.NormalizedPos(self.CurrentPos.X + Range.MaxRange, self.Arena.Mapsize);
-        int startY = Position.NormalizedPos(self.CurrentPos.Y - Range.MaxRange, self.Arena.Mapsize);
-        int endY = Position.NormalizedPos(self.CurrentPos.Y + Range.MaxRange, self.Arena.Mapsize);
-
-        for (int x = startX; x <= endX; x++)
+    public List<Position> InRange2Tiles(BattleEntity self, Direction dir)
+    {
+        if (Range2 == null)
         {
-            for (int y = startY; y <= endY; y++)
-            {
-                Position origin = self.CurrentPos;
-                Position target = new Position(x, y);
-                if (dir == Direction.None)
-                {
-                    if (Range.InRange(origin, target))
-                    {
-                        result.Add(target);
-                    }
-                } else
-                {
-                    if (Range.InRange(origin, target, dir))
-                    {
-                        result.Add(target);
-                    }
-                }
-            }
+            return new List<Position>();
         }
-
-        return result;
+        return Range2.InRangeTiles(self, dir).Except(Range2.InRangeTiles(self, dir)).ToList();
     }
 
-    public List<Position> getInRangeTiles(BattleEntity self)
+    public List<Position> InRangeTiles(BattleEntity self)
     {
-        return getInRangeTiles(self, Direction.None);
+        return InRangeTiles(self, Direction.None);
     }
 
-    public List<Position> getAoeTiles(BattleEntity self, Position target, Direction dir)
+    public List<Position> InRange2Tiles(BattleEntity self)
+    {
+        return InRange2Tiles(self, Direction.None);
+    }
+
+    public List<Position> AoeTiles(BattleEntity self, Position target, Direction dir)
     {
         var result = new List<Position>();
         if (AreaOfEffect == null)

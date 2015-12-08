@@ -19,13 +19,13 @@ class LineAreaOfEffect : AreaOfEffect
         switch (dir)
         {
             case Direction.Up:
-                return target.X == origin.X && target.Y > origin.Y && target.Y - Dist < origin.Y;
+                return target.X == origin.X && target.Y >= origin.Y && target.Y - Dist < origin.Y;
             case Direction.Right:
-                return target.Y == origin.Y && target.X > origin.X && target.X - Dist < origin.X;
+                return target.Y == origin.Y && target.X >= origin.X && target.X - Dist < origin.X;
             case Direction.Down:
-                return target.X == origin.X && target.Y < origin.Y && target.Y + Dist > origin.Y;
+                return target.X == origin.X && target.Y <= origin.Y && target.Y + Dist > origin.Y;
             case Direction.Left:
-                return target.Y == origin.Y && target.X < origin.X && target.X + Dist > origin.X;
+                return target.Y == origin.Y && target.X <= origin.X && target.X + Dist > origin.X;
             default:
                 return false;
         }

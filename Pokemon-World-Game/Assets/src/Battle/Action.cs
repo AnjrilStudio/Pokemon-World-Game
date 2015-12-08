@@ -13,6 +13,8 @@ class Action
     public List<HitEffect> HitEffects { get; private set; }
     public List<GroundEffect> GroundEffects { get; private set; }
     public ActionCost ActionCost { get; set; }
+    public ParticlePattern FxPattern { get; set; }
+    public string FxPrefabName { get; set; }
     public bool NextTurn { get; set; }
 
     public Action()

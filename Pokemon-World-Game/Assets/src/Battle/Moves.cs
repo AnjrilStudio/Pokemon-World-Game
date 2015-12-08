@@ -48,6 +48,8 @@ class Moves
                 action.AreaOfEffect = new LineAreaOfEffect(4);
                 action.HitEffects.Add(new PushEffect(1));
                 action.HitEffects.Add(new DamageEffect(50));
+                action.FxPattern = new RandomLineParticlePattern(0.15f);
+                action.FxPrefabName = "flame";
                 break;
             default:
                 Debug.Log("ne doit pas arriver");

@@ -167,20 +167,27 @@ public class Battle : MonoBehaviour
                 Action actionAI = turn.Actions[UnityEngine.Random.Range(0, turn.Actions.Count)];
                 Position targetPos = null;
                 var dir = Direction.None;
+                while (targetPos == null){ // attention boucle infinie potentielle, mais ne devrait jamais arriver
+                    if (actionAI.TargetType == TargetType.Position)
+                    {
+                        List<Position> targets = actionAI.InRangeTiles(turn);
+                        if (targets.Count != 0)
+                        {
+                            targetPos = targets[UnityEngine.Random.Range(0, targets.Count)];
+                        }
+                    
+                    }
 
-                if (actionAI.TargetType == TargetType.Position)
-                {
-                    List<Position> targets = actionAI.InRangeTiles(turn);
-                    targetPos = targets[UnityEngine.Random.Range(0, targets.Count)];
+                    if (actionAI.TargetType == TargetType.Directional)
+                    {
+                        dir = (Direction)UnityEngine.Random.Range(1, 5);
+                        List<Position> targets = actionAI.InRangeTiles(turn, dir);
+                        if (targets.Count != 0)
+                        {
+                            targetPos = targets[UnityEngine.Random.Range(0, targets.Count)];
+                        }
+                    }
                 }
-
-                if (actionAI.TargetType == TargetType.Directional)
-                {
-                    dir = (Direction)UnityEngine.Random.Range(1, 5);
-                    List<Position> targets = actionAI.InRangeTiles(turn, dir);
-                    targetPos = targets[UnityEngine.Random.Range(0, targets.Count)];
-                }
-
                 PlayTurn(turn, targetPos, actionAI, dir);
                 AITurnTime = 0;
                 currentTurn = (currentTurn + 1) % turns.Count;
@@ -240,6 +247,15 @@ public class Battle : MonoBehaviour
         
         if (inRange)
         {
+            if (action.FxPattern != null && action.FxPrefabName != null)
+            {
+                GameObject fx = new GameObject();
+                fx.transform.position = new Vector3(tilesize * target.X, -tilesize * target.Y, 0);
+                fx.transform.rotation = Quaternion.AngleAxis(Utils.getDirRotation(dir), Vector3.back);
+                var partgen = fx.AddComponent<ParticleGenerator>();
+                partgen.Pattern = action.FxPattern;
+            }
+
             if (action.ActionCost != null)
             {
                 action.ActionCost.ApplyCost(turn, target);

@@ -22,4 +22,21 @@ static class Utils
                 return new Position(0, 0);
         }
     }
+
+    public static float getDirRotation(Direction dir)
+    {
+        switch (dir)
+        {
+            case Direction.Up:
+                return 90f;
+            case Direction.Right:
+                return 0;
+            case Direction.Down:
+                return -90f;
+            case Direction.Left:
+                return 180f;
+            default:
+                return 0;
+        }
+    }
 }

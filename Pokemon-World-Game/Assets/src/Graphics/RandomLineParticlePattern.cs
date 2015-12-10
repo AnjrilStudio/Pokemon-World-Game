@@ -14,12 +14,14 @@ class RandomLineParticlePattern : ParticlePattern
         LateralOffset = lateralOffset;
     }
 
-    public override float ComputeAngle(float time)
+    public override List<float> ComputeAngles(float time, Vector3 target)
     {
-        return 0;
+        List<float> angles = new List<float>();
+        angles.Add(0);
+        return angles;
     }
 
-    public override Vector3 ComputeCenter(float time)
+    public override Vector3 ComputeCenter(float time, Vector3 target)
     {
         return new Vector3(0, (-1 + UnityEngine.Random.value * 2) * LateralOffset / 2, 0);
     }

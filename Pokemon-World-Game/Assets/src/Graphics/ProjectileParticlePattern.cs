@@ -5,24 +5,24 @@ using System.Text;
 using UnityEngine;
 
 
-class SpiralParticlePattern : ParticlePattern
+class ProjectileParticlePattern : ParticlePattern
 {
-    public float AngleRate { get; protected set; }
 
-    public SpiralParticlePattern(float angleRate):base()
+    public ProjectileParticlePattern():base()
     {
-        AngleRate = angleRate;
+        Speed = 0;
+        LifeTime = 0.3f;
     }
 
     public override List<float> ComputeAngles(float time, Vector3 target)
     {
-        List<float> angles = new List<float>();
-        angles.Add(AngleRate * time);
+        List < float > angles = new List<float>();
+        angles.Add(0);
         return angles;
     }
 
     public override Vector3 ComputeCenter(float time, Vector3 target)
     {
-        return new Vector3(0, 0, 0);
+        return Vector3.Lerp(Vector3.zero, target, time / Duration);
     }
 }

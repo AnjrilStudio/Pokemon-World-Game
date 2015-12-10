@@ -16,7 +16,7 @@ class CircleSpiralParticlePattern : SpiralParticlePattern
     }
 
 
-    public override Vector3 ComputeCenter(float time)
+    public override Vector3 ComputeCenter(float time, Vector3 target)
     {
         return new Vector3(Mathf.Cos(time * AngularSpeed) * Radius, Mathf.Sin(time * AngularSpeed) * Radius, 0);
     }

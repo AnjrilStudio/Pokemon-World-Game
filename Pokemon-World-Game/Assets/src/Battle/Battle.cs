@@ -237,6 +237,8 @@ public class Battle : MonoBehaviour
 
     private void PlayTurn(BattleEntity turn, Position target, Action action, Direction dir)
     {
+        var currentPos = new Vector3(tilesize * turn.CurrentPos.X, -tilesize * turn.CurrentPos.Y, 0);
+        var targetPos = new Vector3(tilesize * target.X, -tilesize * target.Y, 0);
         //côté serveur
         //todo envoyer les paramètres au serveur
         bool inRange = action.Range.InRange(turn, target);
@@ -247,14 +249,27 @@ public class Battle : MonoBehaviour
         
         if (inRange)
         {
-            if (action.FxPattern != null && action.FxPrefabName != null)
+            foreach (FxDescriptor fx in action.Fx)
             {
-                GameObject fx = new GameObject();
-                fx.transform.position = new Vector3(tilesize * target.X, -tilesize * target.Y, 0);
-                fx.transform.rotation = Quaternion.AngleAxis(Utils.getDirRotation(dir), Vector3.back);
-                var partgen = fx.AddComponent<ParticleGenerator>();
-                partgen.Pattern = action.FxPattern;
+                if (fx.Pattern != null && fx.PrefabName != null)
+                {
+                    GameObject fxObj = new GameObject();
+                    var partgen = fxObj.AddComponent<ParticleGenerator>();
+                    partgen.Pattern = fx.Pattern;
+                    if (fx.Type == FxType.FromTarget)
+                    {
+                        fxObj.transform.position = targetPos;
+                        fxObj.transform.rotation = Quaternion.AngleAxis(Utils.getDirRotation(dir), Vector3.back);
+                    }
+                    else if (fx.Type == FxType.ToTarget)
+                    {
+                        partgen.Target = targetPos - currentPos;
+                        fxObj.transform.position = currentPos;
+                    }
+
+                }
             }
+            
 
             if (action.ActionCost != null)
             {

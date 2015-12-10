@@ -14,12 +14,14 @@ class RandomConeParticlePattern : ParticlePattern
         AngleSpread = angleSpread;
     }
 
-    public override float ComputeAngle(float time)
+    public override List<float> ComputeAngles(float time, Vector3 target)
     {
-        return (-1 + UnityEngine.Random.value * 2) * AngleSpread / 2;
+        List<float> angles = new List<float>();
+        angles.Add((-1 + UnityEngine.Random.value * 2) * AngleSpread / 2);
+        return angles;
     }
 
-    public override Vector3 ComputeCenter(float time)
+    public override Vector3 ComputeCenter(float time, Vector3 target)
     {
         return new Vector3(0, 0, 0);
     }

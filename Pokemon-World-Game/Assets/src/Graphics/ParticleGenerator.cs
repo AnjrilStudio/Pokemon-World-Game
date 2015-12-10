@@ -31,18 +31,21 @@ public class ParticleGenerator : MonoBehaviour {
     
     public ParticlePattern Pattern { get; set; }
     public string PrefabName { get; set; }
-    
+    public Vector3 Target { get; set; }
+
     void Awake()
     {
         //pattern = new CircleSpiralParticlePattern(1000, 1, 2f);
         Pattern = defaultPattern;
         PrefabName = defaultPrefabName;
+        Target = new Vector3();
     }
 
     // Use this for initialization
     void Start() {
         particules = new List<Particle>();
-        timer = 0;
+        timer = -Pattern.Delay;
+        time = -Pattern.Delay;
     }
 	
 	// Update is called once per frame
@@ -63,40 +66,40 @@ public class ParticleGenerator : MonoBehaviour {
         while (timer > rateTime && time < Pattern.Duration)
         {
             i--;
-            var angle = Pattern.ComputeAngle(time - reminder - rateTime * i);
-            
-
-            /*var particuleObj = new GameObject();
-            var meshFilter = particuleObj.AddComponent<MeshFilter>();
-            meshFilter.mesh = mesh;
-
-            var meshRenderer = particuleObj.AddComponent<MeshRenderer>();
-            var mats = meshRenderer.materials;
-            mats[0] = new Material(material);
-            meshRenderer.materials = mats;
-            //mats[0].color = new Color(1, Random.value * 0.92f, Random.value * 0.16f);*/
-
-            var particuleObj = GameObject.Instantiate(Resources.Load(PrefabName)) as GameObject;
-            particuleObj.transform.parent = gameObject.transform;
-
-            particuleObj.transform.localPosition = Pattern.ComputeCenter(time - reminder - rateTime * i);
-            
-            particuleObj.transform.localRotation = Quaternion.Euler(0, 0, Random.value * 360);
-
-            var rotation = 400f;
-            if (Random.value < 0.5)
+            foreach(float angle in Pattern.ComputeAngles(time - reminder - rateTime * i, Target))
             {
-                rotation = -rotation;
-            }
+                /*var particuleObj = new GameObject();
+                var meshFilter = particuleObj.AddComponent<MeshFilter>();
+                meshFilter.mesh = mesh;
 
-            var particule = new Particle(particuleObj, angle, Pattern.Speed, Pattern.Scale, rotation, Pattern.LifeTime);
-            updateParticule(particule, reminder);
-            if (i != 0)
-            {
-                updateParticule(particule, rateTime * i);
-            }
+                var meshRenderer = particuleObj.AddComponent<MeshRenderer>();
+                var mats = meshRenderer.materials;
+                mats[0] = new Material(material);
+                meshRenderer.materials = mats;
+                //mats[0].color = new Color(1, Random.value * 0.92f, Random.value * 0.16f);*/
 
-            particules.Add(particule);
+                var particuleObj = GameObject.Instantiate(Resources.Load(PrefabName)) as GameObject;
+                particuleObj.transform.parent = gameObject.transform;
+
+                particuleObj.transform.localPosition = Pattern.ComputeCenter(time - reminder - rateTime * i, Target);
+            
+                particuleObj.transform.localRotation = Quaternion.Euler(0, 0, Random.value * 360);
+
+                var rotation = 400f;
+                if (Random.value < 0.5)
+                {
+                    rotation = -rotation;
+                }
+
+                var particule = new Particle(particuleObj, angle, Pattern.Speed, Pattern.Scale, rotation, Pattern.LifeTime);
+                updateParticule(particule, reminder);
+                if (i != 0)
+                {
+                    updateParticule(particule, rateTime * i);
+                }
+
+                particules.Add(particule);
+            }
 
             timer -= rateTime;
         }

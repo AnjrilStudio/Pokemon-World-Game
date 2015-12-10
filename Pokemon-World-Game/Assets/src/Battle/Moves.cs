@@ -36,9 +36,19 @@ class Moves
             case Move.Tackle:
                 action = new Action();
                 action.TargetType = TargetType.Position;
-                action.Range = new DistanceRange(2);
+                action.Range = new DistanceRange(3);
                 action.AreaOfEffect = new DistanceAreaOfEffect(1);
                 action.HitEffects.Add(new DamageEffect(40));
+                FxDescriptor fxTackle1 = new FxDescriptor("flame");
+                fxTackle1.Pattern = new ProjectileParticlePattern();
+                fxTackle1.Pattern.Duration = 0.5f;
+                fxTackle1.Type = FxType.ToTarget;
+                action.Fx.Add(fxTackle1);
+                FxDescriptor fxTackle2 = new FxDescriptor("flame");
+                fxTackle2.Pattern = new ExplosionParticlePattern();
+                fxTackle2.Pattern.Delay = 0.5f;
+                fxTackle2.Type = FxType.FromTarget;
+                action.Fx.Add(fxTackle2);
                 break;
 
             case Move.Gust:
@@ -48,8 +58,10 @@ class Moves
                 action.AreaOfEffect = new LineAreaOfEffect(4);
                 action.HitEffects.Add(new PushEffect(1));
                 action.HitEffects.Add(new DamageEffect(50));
-                action.FxPattern = new RandomLineParticlePattern(0.15f);
-                action.FxPrefabName = "flame";
+                FxDescriptor fxGust = new FxDescriptor("flame");
+                fxGust.Pattern = new RandomLineParticlePattern(0.15f);
+                fxGust.Type = FxType.FromTarget;
+                action.Fx.Add(fxGust);
                 break;
             default:
                 Debug.Log("ne doit pas arriver");

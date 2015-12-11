@@ -16,8 +16,6 @@ public class Battle : MonoBehaviour
     private List<GameObject> highlightRange;
     private List<GameObject> highlightAOE;
 
-    public GUIStyle style = new GUIStyle();
-
     public float mousex;
     public float mousey;
     public float x0;

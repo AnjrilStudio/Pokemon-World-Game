@@ -11,7 +11,7 @@ class ProjectileParticlePattern : ParticlePattern
     public ProjectileParticlePattern():base()
     {
         Speed = 0;
-        LifeTime = 0.3f;
+        LifeTime = 0.25f;
     }
 
     public override List<float> ComputeAngles(float time, Vector3 target)

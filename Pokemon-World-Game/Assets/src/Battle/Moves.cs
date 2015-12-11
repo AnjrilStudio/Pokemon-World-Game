@@ -24,7 +24,7 @@ class Moves
         switch (move)
         {
             case Move.Move:
-                action = new Action();
+                action = new Action("Move");
                 action.TargetType = TargetType.Position;
                 action.Range = new DistanceMPRange(1);
                 action.Range2 = new DistanceMPAPRange(1);
@@ -34,7 +34,7 @@ class Moves
                 break;
 
             case Move.Tackle:
-                action = new Action();
+                action = new Action("Tackle");
                 action.TargetType = TargetType.Position;
                 action.Range = new DistanceRange(3);
                 action.AreaOfEffect = new DistanceAreaOfEffect(1);
@@ -52,7 +52,7 @@ class Moves
                 break;
 
             case Move.Gust:
-                action = new Action();
+                action = new Action("Gust");
                 action.TargetType = TargetType.Directional;
                 action.Range = new LineRange(2);
                 action.AreaOfEffect = new LineAreaOfEffect(4);

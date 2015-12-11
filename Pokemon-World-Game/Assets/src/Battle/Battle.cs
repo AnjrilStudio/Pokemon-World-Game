@@ -16,22 +16,33 @@ public class Battle : MonoBehaviour
     private List<GameObject> highlightRange;
     private List<GameObject> highlightAOE;
 
+    public GUIStyle style = new GUIStyle();
+
     public float mousex;
     public float mousey;
     public float x0;
     public float y0;
     private Position mouseTilePos;
 
-    private Action currentAction;
+    private int currentActionInt;
+    private Action CurrentAction {
+        get
+        {
+            return turns[currentTurn].Actions[currentActionInt];
+        }
+    }
     private Direction currentActionDir;
 
+
     private float AITurnTime = 0;
+
+    
 
     // Use this for initialization
     void Start()
     {
         //todo recevoir les infos du serveur
-
+        
         mouseTilePos = new Position(0, 0);
 
         arena = new Arena(0.32f, mapsize);
@@ -66,8 +77,8 @@ public class Battle : MonoBehaviour
 
         displayGUI();
         
-        currentAction = playerTurn.Actions[0];
-        HighlightAction(playerTurn, currentAction, playerTurn.CurrentPos);
+        currentActionInt = 0;
+        HighlightAction(playerTurn);
     }
 
     // Update is called once per frame
@@ -114,33 +125,33 @@ public class Battle : MonoBehaviour
             }
             highlightAOE.Clear();
 
-            if (currentAction != null)
+            if (CurrentAction != null)
             {
                 //aoe
                 Position target = mouseTilePos;
-                if (currentAction.TargetType == TargetType.Position)
+                if (CurrentAction.TargetType == TargetType.Position)
                 {
                     currentActionDir = Direction.None;
-                    if (currentAction.Range.InRange(turn, target))
+                    if (CurrentAction.Range.InRange(turn, target))
                     {
                         inRange = true;
                     }
-                    if (currentAction.Range2 != null && currentAction.Range2.InRange(turn, target))
+                    if (CurrentAction.Range2 != null && CurrentAction.Range2.InRange(turn, target))
                     {
                         inRange2 = true;
                     }
                 }
 
-                if (currentAction.TargetType == TargetType.Directional)
+                if (CurrentAction.TargetType == TargetType.Directional)
                 {
                     foreach (Direction dir in Enum.GetValues(typeof(Direction)))
                     {
-                        if (currentAction.Range.InRange(turn, target, dir))
+                        if (CurrentAction.Range.InRange(turn, target, dir))
                         {
                             currentActionDir = dir;
                             inRange = true;
                         }
-                        if (currentAction.Range2 != null && currentAction.Range2.InRange(turn, target, dir))
+                        if (CurrentAction.Range2 != null && CurrentAction.Range2.InRange(turn, target, dir))
                         {
                             currentActionDir = dir;
                             inRange2 = true;
@@ -149,7 +160,7 @@ public class Battle : MonoBehaviour
                 }
                 if (inRange || inRange2)
                 {
-                    HighlightAOE(turn, currentAction, target, currentActionDir);
+                    HighlightAOE(turn, CurrentAction, target, currentActionDir);
                 }
             }
         }
@@ -199,32 +210,32 @@ public class Battle : MonoBehaviour
         else
         {
             //action control
-            var highlight = currentAction != null;
+            var highlight = CurrentAction != null;
             if (Input.GetKeyDown(KeyCode.Alpha1))
             {
-                currentAction = turn.Actions[0];
+                currentActionInt = 0;
                 highlight = true;
             }
             if (Input.GetKeyDown(KeyCode.Alpha2))
             {
-                currentAction = turn.Actions[1];
+                currentActionInt = 1;
                 highlight = true;
             }
             if (Input.GetKeyDown(KeyCode.Alpha3))
             {
-                currentAction = turn.Actions[2];
+                currentActionInt = 2;
                 highlight = true;
             }
             if (highlight)
             {
-                HighlightAction(turn, currentAction, turn.CurrentPos);
+                HighlightAction(turn);
             }
             
             //click control
-            if ((inRange || inRange2) && Input.GetMouseButtonDown(0) && hover.activeSelf && currentAction != null)
+            if ((inRange || inRange2) && Input.GetMouseButtonDown(0) && hover.activeSelf && CurrentAction != null)
             {
-                PlayTurn(turns[currentTurn], mouseTilePos, currentAction, currentActionDir);
-                if (currentAction.NextTurn)
+                PlayTurn(turns[currentTurn], mouseTilePos, CurrentAction, currentActionDir);
+                if (CurrentAction.NextTurn)
                 {
                     currentTurn = (currentTurn + 1) % turns.Count; //todo methode nextturn
                     turns[currentTurn].MP = turns[currentTurn].MaxMP;
@@ -304,9 +315,10 @@ public class Battle : MonoBehaviour
         highlightRange.Clear();
     }
 
-    private void HighlightAction(BattleEntity self, Action action, Position tilePos)
+    private void HighlightAction(BattleEntity self)
     {
-
+        Position tilePos = self.CurrentPos;
+        Action action = CurrentAction;
         foreach (GameObject obj in highlightRange)
         {
             Destroy(obj);
@@ -341,15 +353,17 @@ public class Battle : MonoBehaviour
     private void displayGUI()
     {
         GameObject canvas = GameObject.Find("Canvas");
-        foreach(Text text in canvas.GetComponentsInChildren<Text>())
+
+        foreach (Transform child in canvas.transform)
         {
-            GameObject.Destroy(text);
+            GameObject.Destroy(child.gameObject);
         }
 
+        //pokemons
         int index = 0;
         foreach(BattleEntity turn in turns)
         {
-            var textObject = new GameObject();
+            var textObject = new GameObject("text");
             textObject.transform.parent = canvas.transform;
             textObject.transform.localPosition = new Vector3(160, 80 + index * 30, 0);
             var textComp = textObject.AddComponent<Text>();
@@ -358,8 +372,43 @@ public class Battle : MonoBehaviour
 
             index++;
         }
-        
 
+        //attaques
+        index = 0;
+        foreach (Action action in turns[currentTurn].Actions)
+        {
+
+            var buttonObject= new GameObject("button");
+            buttonObject.transform.parent = canvas.transform;
+            buttonObject.transform.localPosition = new Vector3(-100 + index * 50, -200, 0);
+            var buttonComp = buttonObject.AddComponent<Button>();
+            int tmpIndex = index;
+            buttonComp.onClick.AddListener(delegate {
+                currentActionInt = tmpIndex;
+                HighlightAction(turns[currentTurn]);
+            });
+
+            var imgComp = buttonObject.AddComponent<Image>();
+            imgComp.sprite = UnityEditor.AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UISprite.psd");
+
+            var textObject = new GameObject("text");
+            textObject.transform.parent = buttonObject.transform;
+            textObject.transform.localPosition = new Vector3(0, 0, 0);
+
+            var textComp = textObject.AddComponent<Text>();
+            textComp.alignment = TextAnchor.MiddleCenter;
+            textComp.font = Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font;
+            textComp.text = action.Name;
+            textComp.color = Color.black;
+
+
+            buttonObject.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 50);
+            buttonObject.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 50);
+            textObject.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 50);
+            textObject.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 50);
+
+            index++;
+        }
     }
 
     private BattleEntity initPokemon(Pokemon pokemon, bool isAI)

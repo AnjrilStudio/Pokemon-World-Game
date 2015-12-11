@@ -6,6 +6,7 @@ using UnityEngine;
 
 class Action
 {
+    public string Name { get; private set; }
     public TargetType TargetType;
     public Range Range { get; set; }
     public Range Range2 { get; set; }
@@ -16,8 +17,9 @@ class Action
     public List<FxDescriptor> Fx { get; private set; }
     public bool NextTurn { get; set; }
 
-    public Action()
+    public Action(string name)
     {
+        Name = name;
         TargetType = TargetType.None;
         Fx = new List<FxDescriptor>();
         HitEffects = new List<HitEffect>();

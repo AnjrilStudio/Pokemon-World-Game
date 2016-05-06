@@ -1,0 +1,6 @@
+NUGET
+  remote: http://api.nuget.org/v3/index.json
+  specs:
+    Anjril.Common.Network (0.0.2)
+    Anjril.Common.Network.UdpImpl (0.0.2)
+      Anjril.Common.Network (>= 0.0.2)

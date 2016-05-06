@@ -53,7 +53,7 @@ class BattleEntity
     
     public void MoveBattleEntity(Position target)
     {
-        Pokemon.transform.position = new Vector3(target.X * Arena.Tilesize, -target.Y * Arena.Tilesize, 0);
+        Pokemon.transform.position = new Vector3(target.X * Arena.Tilesize, -target.Y * Arena.Tilesize, -1);
         CurrentPos.X = target.X;
         CurrentPos.Y = target.Y;
     }

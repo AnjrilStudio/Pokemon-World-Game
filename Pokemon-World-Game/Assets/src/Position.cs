@@ -59,6 +59,11 @@ class Position
         return pos;
     }
 
+    public static bool isInMap(int x, int y, int mapsize)
+    {
+        return x >= 0 && y >= 0 && x < mapsize && y < mapsize;
+    }
+
     public bool Equals(Position p)
     {
         return X == p.X && Y == p.Y;

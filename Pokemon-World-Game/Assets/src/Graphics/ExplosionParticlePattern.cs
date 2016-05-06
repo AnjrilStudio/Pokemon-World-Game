@@ -7,9 +7,11 @@ using UnityEngine;
 
 class ExplosionParticlePattern : ParticlePattern
 {
+    public float SpeedOffset { get; protected set; }
 
-    public ExplosionParticlePattern():base()
+    public ExplosionParticlePattern(float speedOffset):base()
     {
+        SpeedOffset = speedOffset;
         Duration = 2 * 1f / Rate;
         LifeTime = 0.25f;
         Speed = 1.5f;
@@ -29,5 +31,10 @@ class ExplosionParticlePattern : ParticlePattern
     public override Vector3 ComputeCenter(float time, Vector3 target)
     {
         return Vector3.zero;
+    }
+
+    public override float ComputeSpeed()
+    {
+        return Speed + ((-1 + UnityEngine.Random.value * 2) * SpeedOffset / 2);
     }
 }

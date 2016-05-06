@@ -1,4 +1,4 @@
-﻿using System;
+﻿using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -38,5 +38,24 @@ static class Utils
             default:
                 return 0;
         }
+    }
+
+    public static Direction getRandomDir()
+    {
+        int v = Mathf.FloorToInt(Random.value * 4);
+        switch (v)
+        {
+            case 0:
+                return Direction.Up;
+            case 1:
+                return Direction.Right;
+            case 2:
+                return Direction.Down;
+            case 3:
+                return Direction.Left;
+            default:
+                return Direction.None;
+        }
+
     }
 }

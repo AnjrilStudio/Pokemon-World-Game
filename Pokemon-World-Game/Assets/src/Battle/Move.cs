@@ -9,5 +9,7 @@ enum Move
     Move,
     Tackle,
     Sand_Attack,
-    Gust
+    Gust,
+    Bubble,
+    Water_Gun
 }

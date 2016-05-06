@@ -9,6 +9,7 @@ public class ParticleGenerator : MonoBehaviour {
         avec offset random ?
     fonction pour l'angle en fonction du temps !!x
         avec offset random ?
+    extraire certaines propriétés de l'héritage : scale, rotation, speed, lifetime...
     fonction pour la trajectoire en fonction du temps
     fonction pour le scale en fonction du temps
     fonction pour le speed en fonction du temps
@@ -83,15 +84,9 @@ public class ParticleGenerator : MonoBehaviour {
 
                 particuleObj.transform.localPosition = Pattern.ComputeCenter(time - reminder - rateTime * i, Target);
             
-                particuleObj.transform.localRotation = Quaternion.Euler(0, 0, Random.value * 360);
-
-                var rotation = 400f;
-                if (Random.value < 0.5)
-                {
-                    rotation = -rotation;
-                }
-
-                var particule = new Particle(particuleObj, angle, Pattern.Speed, Pattern.Scale, rotation, Pattern.LifeTime);
+                particuleObj.transform.localRotation = Quaternion.Euler(0, 0, Pattern.ComputeRotation());
+                
+                var particule = new Particle(particuleObj, angle, Pattern.ComputeSpeed(), Pattern.ComputeScale(), Pattern.ComputeRotationSpeed(), Pattern.LifeTime);
                 updateParticule(particule, reminder);
                 if (i != 0)
                 {
@@ -123,7 +118,7 @@ public class ParticleGenerator : MonoBehaviour {
             var oldPos = part.Obj.transform.localPosition;
             part.Obj.transform.localPosition = new Vector3(oldPos.x + Mathf.Cos(part.Angle * Mathf.PI / 180) * part.Speed * deltaTime, oldPos.y + Mathf.Sin(part.Angle * Mathf.PI / 180) * part.Speed * deltaTime, oldPos.z);
             part.Obj.transform.localScale = new Vector3(part.Scale, part.Scale, part.Scale);
-            part.Obj.transform.Rotate(0, 0, deltaTime * part.Rotation);
+            part.Obj.transform.Rotate(0, 0, deltaTime * part.RotationSpeed);
             /*if (part.Rotation < 0)
             {
                 part.Obj.GetComponent<MeshRenderer>().materials[0].color = new Color(1, Mathf.Lerp(0.92f, 0, part.Time / part.LifeTime), Mathf.Lerp(0.16f, 0, part.Time / part.LifeTime));
@@ -146,18 +141,18 @@ public class ParticleGenerator : MonoBehaviour {
         public float MaxSpeed { get; private set; }
         public float Speed { get; set; }
         public float Scale { get; private set; }
-        public float Rotation { get; private set; }
+        public float RotationSpeed { get; private set; }
         public float LifeTime { get; private set; }
         public float Time { get; set; }
 
-        public Particle(GameObject obj, float angle, float speed, float scale, float rotation, float lifeTime)
+        public Particle(GameObject obj, float angle, float speed, float scale, float rotationSpeed, float lifeTime)
         {
             Obj = obj;
             Angle = angle;
             MaxSpeed = speed;
             Speed = speed;
             Scale = scale;
-            Rotation = rotation;
+            RotationSpeed = rotationSpeed;
             LifeTime = lifeTime;
             Time = 0;
         }

@@ -9,6 +9,11 @@ class RandomLineParticlePattern : ParticlePattern
 {
     public float LateralOffset { get; protected set; }
 
+    public RandomLineParticlePattern() : base()
+    {
+        LateralOffset = 0f;
+    }
+
     public RandomLineParticlePattern(float lateralOffset):base()
     {
         LateralOffset = lateralOffset;

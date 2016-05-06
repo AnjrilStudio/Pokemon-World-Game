@@ -20,7 +20,7 @@ class Arena
         {
             for (int j = 0; j < mapsize; j++)
             {
-                var obj = GameObject.Instantiate(Resources.Load("ground")) as GameObject;
+                var obj = GameObject.Instantiate(Resources.Load("ground/ground")) as GameObject;
                 var mapNode = GameObject.FindGameObjectWithTag("Arena");
                 obj.transform.parent = mapNode.transform;
                 obj.transform.position = new Vector3(tilesize * i, -tilesize * j, 0);

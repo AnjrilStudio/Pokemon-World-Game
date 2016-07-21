@@ -145,6 +145,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   renderDistance: 30
   zoom: 1
+  nextX: 0
+  nextY: 0
+  port: 4245
 --- !u!81 &955687863
 AudioListener:
   m_ObjectHideFlags: 0

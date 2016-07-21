@@ -205,7 +205,7 @@ public class population_test : MonoBehaviour {
     
     private void moveEntity(PopulationEntity pop, Direction dir)
     {
-        Position p = Utils.getDirPosition(dir);
+        Position p = Utils.GetDirPosition(dir);
         Position newPos = new Position(pop.Pos.X + p.X, pop.Pos.Y + p.Y);
         newPos.NormalizePos(mapsize);
 
@@ -282,7 +282,7 @@ public class population_test : MonoBehaviour {
 
         foreach (PopulationEntity p in tmpList)
         {
-            moveEntity(p, Utils.getRandomDir());
+            moveEntity(p, Utils.GetRandomDir());
         }
 
         return totalCount;

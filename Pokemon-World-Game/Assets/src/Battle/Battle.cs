@@ -275,7 +275,7 @@ public class Battle : MonoBehaviour
                     if (fx.Type == FxType.FromTarget)
                     {
                         fxObj.transform.position = targetPos;
-                        fxObj.transform.rotation = Quaternion.AngleAxis(Utils.getDirRotation(dir), Vector3.back);
+                        fxObj.transform.rotation = Quaternion.AngleAxis(Utils.GetDirRotation(dir), Vector3.back);
                     }
                     else if (fx.Type == FxType.ToTarget)
                     {
@@ -457,6 +457,7 @@ public class Battle : MonoBehaviour
         battleEntity.Actions.Add(Moves.Get(Move.Gust));
         battleEntity.Actions.Add(Moves.Get(Move.Bubble));
         battleEntity.Actions.Add(Moves.Get(Move.Water_Gun));
+        battleEntity.Actions.Add(Moves.Get(Move.Thunder_Shock));
 
         battleEntity.MoveBattleEntity(Position.Random(arena.Mapsize, arena.Mapsize));
 

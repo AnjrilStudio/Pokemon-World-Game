@@ -6,7 +6,7 @@ using System.Text;
 
 static class Utils
 {
-    public static Position getDirPosition(Direction dir)
+    public static Position GetDirPosition(Direction dir)
     {
         switch (dir)
         {
@@ -23,7 +23,7 @@ static class Utils
         }
     }
 
-    public static float getDirRotation(Direction dir)
+    public static float GetDirRotation(Direction dir)
     {
         switch (dir)
         {
@@ -40,7 +40,37 @@ static class Utils
         }
     }
 
-    public static Direction getRandomDir()
+    public static Direction GetDirection(Position p1, Position p2)
+    {
+        if (Position.Distance(p1, p2) != 1)
+        {
+            return Direction.None;
+        } else
+        {
+            if (p1.X == p2.X)
+            {
+                if (p1.Y < p2.Y)
+                {
+                    return Direction.Down;
+                } else
+                {
+                    return Direction.Up;
+                }
+            } else
+            {
+                if (p1.X < p2.X)
+                {
+                    return Direction.Right;
+                }
+                else
+                {
+                    return Direction.Left;
+                }
+            }
+        }
+    }
+
+    public static Direction GetRandomDir()
     {
         int v = Mathf.FloorToInt(Random.value * 4);
         switch (v)

@@ -64,6 +64,7 @@ public class ParticleGenerator : MonoBehaviour {
         var rateTime = 1f / Pattern.Rate;
         int i = Mathf.FloorToInt(timer / rateTime);
         float reminder = timer - (float)i * rateTime;
+        //TODO s'assurer que toute les boucles se font même si time dépasse la durée
         while (timer > rateTime && time < Pattern.Duration)
         {
             i--;

@@ -11,5 +11,6 @@ enum Move
     Sand_Attack,
     Gust,
     Bubble,
-    Water_Gun
+    Water_Gun,
+    Thunder_Shock
 }

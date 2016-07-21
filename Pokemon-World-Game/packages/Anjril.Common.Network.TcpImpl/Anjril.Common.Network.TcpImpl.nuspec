@@ -1,17 +1,19 @@
 <?xml version="1.0"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2011/10/nuspec.xsd">
   <metadata>
-    <id>Anjril.Common.Network</id>
+    <id>Anjril.Common.Network.TcpImpl</id>
     <version>1.0.0-rc1</version>
-    <title>Anjril.Common.Network</title>
+    <title>Anjril.Common.Network.TcpImpl</title>
     <authors>Anjril Studio</authors>
     <owners>Anjril Studio</owners>
     <licenseUrl>https://github.com/AnjrilStudio/Common/blob/master/LICENSE</licenseUrl>
     <projectUrl>https://github.com/AnjrilStudio/Common</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>The network layer of all the Anjril Studio projects.</description>
+    <description>The udp implementation of the Anjril Studio network layer.</description>
     <releaseNotes>https://github.com/AnjrilStudio/Common/releases</releaseNotes>
     <copyright>Copyright 2015</copyright>
-    <dependencies />
+    <dependencies>
+      <dependency id="Anjril.Common.Network" version="1.0.0-rc1" />
+    </dependencies>
   </metadata>
 </package>

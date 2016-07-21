@@ -103,6 +103,47 @@ class Moves
                 fxWaterGun.Type = FxType.FromTarget;
                 action.Fx.Add(fxWaterGun);
                 break;
+            case Move.Thunder_Shock:
+                action = new Action("ThunderShock");
+                action.TargetType = TargetType.Position;
+                action.Range = new DistanceRange(5);
+                action.HitEffects.Add(new DamageEffect(40));
+
+                FxDescriptor fxThunderShock = new FxDescriptor("spark");
+                fxThunderShock.Pattern = new ProjectileArcParticlePattern(4f);
+                fxThunderShock.Pattern.Duration = 0.10f;
+                fxThunderShock.Pattern.Scale = 1;
+                fxThunderShock.Pattern.LifeTime = 0.20f;
+                fxThunderShock.Pattern.Rate = 100;
+                fxThunderShock.Pattern.RotationSpeed = 0;
+                fxThunderShock.Pattern.AddModifier(new RandomRotationModifier());
+                fxThunderShock.Type = FxType.ToTarget;
+                action.Fx.Add(fxThunderShock);
+                //TODO inventer le "repeat"
+                FxDescriptor fxThunderShock2 = new FxDescriptor("spark");
+                fxThunderShock2.Pattern = new ProjectileArcParticlePattern(-5f);
+                fxThunderShock2.Pattern.Duration = 0.10f;
+                fxThunderShock2.Pattern.Delay = 0.20f;
+                fxThunderShock2.Pattern.Scale = 1;
+                fxThunderShock2.Pattern.LifeTime = 0.20f;
+                fxThunderShock2.Pattern.Rate = 100;
+                fxThunderShock2.Pattern.RotationSpeed = 0;
+                fxThunderShock2.Pattern.AddModifier(new RandomRotationModifier());
+                fxThunderShock2.Type = FxType.ToTarget;
+                action.Fx.Add(fxThunderShock2);
+
+                FxDescriptor fxThunderShock3 = new FxDescriptor("spark");
+                fxThunderShock3.Pattern = new ProjectileArcParticlePattern(6f);
+                fxThunderShock3.Pattern.Duration = 0.10f;
+                fxThunderShock3.Pattern.Delay = 0.40f;
+                fxThunderShock3.Pattern.Scale = 1;
+                fxThunderShock3.Pattern.LifeTime = 0.20f;
+                fxThunderShock3.Pattern.Rate = 100;
+                fxThunderShock3.Pattern.RotationSpeed = 0;
+                fxThunderShock3.Pattern.AddModifier(new RandomRotationModifier());
+                fxThunderShock3.Type = FxType.ToTarget;
+                action.Fx.Add(fxThunderShock3);
+                break;
             default:
                 Debug.Log("ne doit pas arriver");
                 break;

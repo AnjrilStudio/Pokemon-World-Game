@@ -15,7 +15,7 @@ class PushEffect : HitEffect
 
     public override void apply(BattleEntity self, BattleEntity target, Direction dir)
     {
-        Position newPos = new Position(target.CurrentPos.X + Utils.getDirPosition(dir).X * Dist, target.CurrentPos.Y + Utils.getDirPosition(dir).Y * Dist);
+        Position newPos = new Position(target.CurrentPos.X + Utils.GetDirPosition(dir).X * Dist, target.CurrentPos.Y + Utils.GetDirPosition(dir).Y * Dist);
         newPos.NormalizePos(self.Arena.Mapsize);
         target.MoveBattleEntity(newPos);
     }

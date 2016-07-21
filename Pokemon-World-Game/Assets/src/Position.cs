@@ -64,11 +64,6 @@ class Position
         return x >= 0 && y >= 0 && x < mapsize && y < mapsize;
     }
 
-    public bool Equals(Position p)
-    {
-        return X == p.X && Y == p.Y;
-    }
-
     public static Position Random(int maxX, int maxY)
     {
         int x = UnityEngine.Random.Range(0, maxX);
@@ -77,9 +72,34 @@ class Position
         return new Position(x, y);
     }
 
+    public override bool Equals(object obj)
+    {
+        var p = obj as Position;
+
+        if (p == null)
+        {
+            return false;
+        }
+
+        return X == p.X && Y == p.Y;
+    }
+
+    public override int GetHashCode()
+    {
+        return X * 62482673 + Y;
+    }
+
     public static int Distance(Position p1, Position p2)
     {
         return Math.Abs(p1.X - p2.X) + Math.Abs(p1.Y - p2.Y);
+    }
+
+    public static Position GetSegment(int x, int y, int chunksize)
+    {
+        var px = x / chunksize;
+        var py = y / chunksize;
+
+        return new Position(px, py);
     }
 
     public override string ToString()

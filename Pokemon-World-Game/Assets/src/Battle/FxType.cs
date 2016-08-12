@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-enum FxType
+public enum FxType
 {
     None,
     FromTarget,

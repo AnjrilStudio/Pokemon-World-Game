@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using Anjril.PokemonWorld.Common.State;
 
 public class population_test : MonoBehaviour {
     
@@ -282,7 +283,7 @@ public class population_test : MonoBehaviour {
 
         foreach (PopulationEntity p in tmpList)
         {
-            moveEntity(p, Utils.GetRandomDir());
+            moveEntity(p, Utils.RandomDirection());
         }
 
         return totalCount;

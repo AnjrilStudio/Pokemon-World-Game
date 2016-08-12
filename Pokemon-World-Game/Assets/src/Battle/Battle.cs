@@ -1,16 +1,23 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
-using System;
 using UnityEngine.UI;
+using Anjril.PokemonWorld.Common;
+using Anjril.PokemonWorld.Common.State;
+using UnityEngine.SceneManagement;
 
 public class Battle : MonoBehaviour
 {
 
-    private List<BattleEntity> turns;
+    private List<BattleEntityClient> turns;
+    private Dictionary<int, BattleEntityClient> entities;
     private float tilesize = 0.32f;
     private Arena arena;
     private int mapsize = 10;
     public int currentTurn = 0;
+    private int currentActionNumber = -1;
+
+    private List<Action> trainerActions;
+    private bool isCurrentActionTrainer;
 
     public GameObject hover;
     private List<GameObject> highlightRange;
@@ -27,13 +34,18 @@ public class Battle : MonoBehaviour
         get
         {
             if (currentActionInt < 0) return null;
-            return turns[currentTurn].Actions[currentActionInt];
+            if (isCurrentActionTrainer)
+            {
+                return trainerActions[currentActionInt];
+            } else
+            {
+                return turns[currentTurn].Actions[currentActionInt];
+            }
+            
         }
     }
     private Direction currentActionDir;
-
-
-    private float AITurnTime = 0;
+    
     private float animTimer = 0;
 
 
@@ -45,27 +57,14 @@ public class Battle : MonoBehaviour
         
         mouseTilePos = new Position(0, 0);
 
-        arena = new Arena(0.32f, mapsize);
-        turns = new List<BattleEntity>();
-        BattleEntity playerTurn = null;
-
-        if (ApplicationModel.playerBattleStartEntity != null)
-        {
-            Pokemon playerPkmn = ApplicationModel.playerBattleStartEntity.Pokemons[0];
-            playerTurn = initPokemon(playerPkmn, false);
-            turns.Add(playerTurn);
-
-            foreach (MapEntity other in ApplicationModel.otherBattleStartEntities)
-            {
-                turns.Add(initPokemon(other.Pokemons[0], true));
-            }
-        } else
-        {
-            //mode dev en lançant scene_battle
-            playerTurn = initPokemon(new Pokemon(1, 5), false);
-            turns.Add(playerTurn);
-            turns.Add(initPokemon(new Pokemon(2, 5), true));
-        }
+        arena = new Arena(mapsize, 0.32f);
+        turns = new List<BattleEntityClient>();
+        entities = new Dictionary<int, BattleEntityClient>();
+        trainerActions = new List<Action>();
+        trainerActions.Add(TrainerActions.Get(TrainerAction.End_Battle));
+        trainerActions.Add(TrainerActions.Get(TrainerAction.Pokemon_Go));
+        trainerActions.Add(TrainerActions.Get(TrainerAction.Pokemon_Come_Back));
+        trainerActions.Add(TrainerActions.Get(TrainerAction.Pokeball));
 
         hover = GameObject.Instantiate(Resources.Load("hover")) as GameObject;
         hover.SetActive(false);
@@ -76,7 +75,8 @@ public class Battle : MonoBehaviour
         highlightAOE = new List<GameObject>();
 
         displayGUI();
-        
+
+        isCurrentActionTrainer = false;
         currentActionInt = -1;
         //HighlightAction(playerTurn);
     }
@@ -85,135 +85,151 @@ public class Battle : MonoBehaviour
     void Update()
     {
         animTimer += Time.deltaTime;
-        if (animTimer >= 0)
-            {
+        if (animTimer >= 0) {
             //todo recevoir les mises à jour du serveur
             //turn play
-            BattleEntity turn = turns[currentTurn];
+            /*
             if (turn.HP == 0)
             {
                 Application.LoadLevel("scene_map");
-            }
+            }*/
 
-
-
-            bool inRange = false;
-            bool inRange2 = false;
-
-            //pointer control
-            Camera camera = GetComponent<Camera>();
-            Vector3 p = camera.WorldToScreenPoint(gameObject.transform.position);
-
-            mousex = Input.mousePosition.x - p.x;
-            mousey = Input.mousePosition.y - p.y;
-
-            var factor = 250 * tilesize / camera.orthographicSize; // comprendre 250 ?
-            x0 = mousex + factor * mapsize / 2;
-            y0 = mousey + factor * mapsize / 2;
-
-            mouseTilePos.X = Mathf.FloorToInt(x0 / (80 / camera.orthographicSize)); //comprendre 80 ?
-            mouseTilePos.Y = mapsize - (Mathf.FloorToInt(y0 / (80 / camera.orthographicSize)) + 1);
-
-            //hover
-            if (mouseTilePos.X >= 0 && mouseTilePos.X < mapsize && mouseTilePos.Y >= 0 && mouseTilePos.Y < mapsize)
+            if (Global.Instance.BattleActionMessages.Count > 0)
             {
-                //pointer tile
-                hover.transform.position = new Vector3(tilesize * mouseTilePos.X, -tilesize * mouseTilePos.Y, 0);
-                hover.SetActive(true);
-
-                //todo faire que si la case change
-                foreach (GameObject obj in highlightAOE)
+                BattleActionMessage battleaction = Global.Instance.BattleActionMessages.Peek();
+                if (battleaction.ActionId == currentActionNumber + 1)
                 {
-                    Destroy(obj);
-                }
-                highlightAOE.Clear();
-
-                if (CurrentAction != null)
-                {
-                    //aoe
-                    Position target = mouseTilePos;
-                    if (CurrentAction.TargetType == TargetType.Position)
+                    battleaction = Global.Instance.BattleActionMessages.Dequeue();
+                    if (battleaction.State == null)
                     {
-                        currentActionDir = Direction.None;
-                        if (CurrentAction.Range.InRange(turn, target))
+                        Debug.Log("endbattle");
+                        SceneManager.LoadScene("scene_map");
+                    }
+
+                    if (battleaction.Action != null)
+                    {
+                        Debug.Log(animTimer);
+                        PlayTurn(turns[currentTurn], battleaction.Target, battleaction.Action, battleaction.Dir);
+                    }
+
+                    BattleStateMessage battlestate = battleaction.State;
+                    foreach (BattleStateEntity entity in battlestate.Entities)
+                    {
+                        if (entities.ContainsKey(entity.Id))
+                        {
+                            var battleEntity = entities[entity.Id];
+                            battleEntity.UpdateBattleEntity(entity, arena.Tilesize);
+                        }
+                        else
+                        {
+                            var pkmn = initPokemon(entity.Id, entity.PokemonId, entity.CurrentPos);
+                            pkmn.HP = entity.HP;
+                            pkmn.MaxHP = entity.MaxHP;
+                            turns.Add(pkmn);
+                        }
+                    }
+
+                    currentActionNumber++;
+                    currentTurn = battlestate.CurrentTurn;
+                    displayGUI();
+                }
+                
+            }
+            
+
+            if (turns.Count > 0)
+            {
+
+                BattleEntity turn = turns[currentTurn];
+
+                bool inRange = false;
+                bool inRange2 = false;
+
+                //pointer control
+                Camera camera = GetComponent<Camera>();
+                Vector3 p = camera.WorldToScreenPoint(gameObject.transform.position);
+
+                mousex = Input.mousePosition.x - p.x;
+                mousey = Input.mousePosition.y - p.y;
+
+                var factor = 250 * tilesize / camera.orthographicSize; // comprendre 250 ?
+                x0 = mousex + factor * mapsize / 2;
+                y0 = mousey + factor * mapsize / 2;
+
+                var mousetileposx = Mathf.FloorToInt(x0 / (80 / camera.orthographicSize)); //comprendre 80 ?
+                var mousetileposy = mapsize - (Mathf.FloorToInt(y0 / (80 / camera.orthographicSize)) + 1);
+                mouseTilePos = new Position(mousetileposx, mousetileposy);
+
+                //hover
+                if (mouseTilePos.X >= 0 && mouseTilePos.X < mapsize && mouseTilePos.Y >= 0 && mouseTilePos.Y < mapsize)
+                {
+                    //pointer tile
+                    hover.transform.position = new Vector3(tilesize * mouseTilePos.X, -tilesize * mouseTilePos.Y, 0);
+                    hover.SetActive(true);
+
+                    //todo faire que si la case change
+                    foreach (GameObject obj in highlightAOE)
+                    {
+                        Destroy(obj);
+                    }
+                    highlightAOE.Clear();
+
+                    if (CurrentAction != null)
+                    {
+
+                        if (CurrentAction.TargetType == TargetType.None)
                         {
                             inRange = true;
                         }
-                        if (CurrentAction.Range2 != null && CurrentAction.Range2.InRange(turn, target))
+                        else
                         {
-                            inRange2 = true;
-                        }
-                    }
+                            //aoe
+                            Position target = mouseTilePos;
+                            if (CurrentAction.TargetType == TargetType.Position)
+                            {
+                                currentActionDir = Direction.None;
+                                if (CurrentAction.Range.InRange(arena, turn, target))
+                                {
+                                    inRange = true;
+                                }
+                                if (CurrentAction.Range2 != null && CurrentAction.Range2.InRange(arena, turn, target))
+                                {
+                                    inRange2 = true;
+                                }
+                            }
 
-                    if (CurrentAction.TargetType == TargetType.Directional)
-                    {
-                        foreach (Direction dir in Enum.GetValues(typeof(Direction)))
-                        {
-                            if (CurrentAction.Range.InRange(turn, target, dir))
+                            if (CurrentAction.TargetType == TargetType.Directional)
                             {
-                                currentActionDir = dir;
-                                inRange = true;
+                                foreach (Direction dir in System.Enum.GetValues(typeof(Direction)))
+                                {
+                                    if (CurrentAction.Range.InRange(arena, turn, target, dir))
+                                    {
+                                        currentActionDir = dir;
+                                        inRange = true;
+                                    }
+                                    if (CurrentAction.Range2 != null && CurrentAction.Range2.InRange(arena, turn, target, dir))
+                                    {
+                                        currentActionDir = dir;
+                                        inRange2 = true;
+                                    }
+                                }
                             }
-                            if (CurrentAction.Range2 != null && CurrentAction.Range2.InRange(turn, target, dir))
+                            if (inRange || inRange2)
                             {
-                                currentActionDir = dir;
-                                inRange2 = true;
+                                HighlightAOE(turn, CurrentAction, target, currentActionDir);
                             }
                         }
-                    }
-                    if (inRange || inRange2)
-                    {
-                        HighlightAOE(turn, CurrentAction, target, currentActionDir);
                     }
                 }
-            }
-            else
-            {
-                hover.SetActive(false);
-            }
-
-            if (turn.AI)
-            {
-                //côté serveur
-                AITurnTime += Time.deltaTime;
-                if (AITurnTime > 2f)
+                else
                 {
-                    Action actionAI = turn.Actions[UnityEngine.Random.Range(0, turn.Actions.Count)];
-                    Position targetPos = null;
-                    var dir = Direction.None;
-                    while (targetPos == null){ // attention boucle infinie potentielle, mais ne devrait jamais arriver
-                        if (actionAI.TargetType == TargetType.Position)
-                        {
-                            List<Position> targets = actionAI.InRangeTiles(turn);
-                            if (targets.Count != 0)
-                            {
-                                targetPos = targets[UnityEngine.Random.Range(0, targets.Count)];
-                            }
-                    
-                        }
-
-                        if (actionAI.TargetType == TargetType.Directional)
-                        {
-                            dir = (Direction)UnityEngine.Random.Range(1, 5);
-                            List<Position> targets = actionAI.InRangeTiles(turn, dir);
-                            if (targets.Count != 0)
-                            {
-                                targetPos = targets[UnityEngine.Random.Range(0, targets.Count)];
-                            }
-                        }
-                    }
-                    PlayTurn(turn, targetPos, actionAI, dir);
-                    AITurnTime = 0;
-                    currentTurn = (currentTurn + 1) % turns.Count;
-                    turns[currentTurn].MP = turns[currentTurn].MaxMP;
-                    turns[currentTurn].MP = turns[currentTurn].MaxAP;
-                    displayGUI();
+                    hover.SetActive(false);
                 }
-            }
-            else
-            {
+
+                
                 //action control
-                var highlight = CurrentAction != null;
+                //var highlight = CurrentAction != null;
+                var highlight = false;
                 if (Input.GetKeyDown(KeyCode.Alpha1))
                 {
                     currentActionInt = 0;
@@ -237,34 +253,33 @@ public class Battle : MonoBehaviour
                 //click control
                 if ((inRange || inRange2) && Input.GetMouseButtonDown(0) && hover.activeSelf && CurrentAction != null)
                 {
-                    PlayTurn(turns[currentTurn], mouseTilePos, CurrentAction, currentActionDir);
-                    if (CurrentAction.NextTurn)
+                    if (isCurrentActionTrainer)
                     {
-                        currentTurn = (currentTurn + 1) % turns.Count; //todo methode nextturn
-                        turns[currentTurn].MP = turns[currentTurn].MaxMP;
-                        turns[currentTurn].AP = turns[currentTurn].MaxAP;
-                        displayGUI();
+                        Global.Instance.Client.Send("tra/" + Global.Instance.PlayerId + "," + currentTurn + "," + mouseTilePos.ToString() + "," + CurrentAction.Id);
+                    } else
+                    {
+                        Global.Instance.Client.Send("act/" + Global.Instance.PlayerId + "," + currentTurn + "," + mouseTilePos.ToString() + "," + CurrentAction.Id + "," + currentActionDir.ToString());
                     }
+                    
                 }
             }
         }
     }
 
-    private void PlayTurn(BattleEntity turn, Position target, Action action, Direction dir)
+    private void PlayTurn(BattleEntity entity, Position target, Action action, Direction dir)
     {
-        var currentPos = new Vector3(tilesize * turn.CurrentPos.X, -tilesize * turn.CurrentPos.Y, 0);
+        var currentPos = new Vector3(tilesize * entity.CurrentPos.X, -tilesize * entity.CurrentPos.Y, 0);
         var targetPos = new Vector3(tilesize * target.X, -tilesize * target.Y, 0);
-        //côté serveur
-        //todo envoyer les paramètres au serveur
-        bool inRange = action.Range.InRange(turn, target);
-        if (action.Range2 != null && action.Range2.InRange(turn, target))
+        
+        bool inRange = action.Range.InRange(arena, entity, target);
+        if (action.Range2 != null && action.Range2.InRange(arena, entity, target))
         {
             inRange = true;
         }
         
         if (inRange)
         {
-            foreach (FxDescriptor fx in action.Fx)
+            foreach (FxDescriptor fx in MoveFx.Get((Move)action.Id))
             {
                 if (fx.Pattern != null && fx.PrefabName != null)
                 {
@@ -275,7 +290,7 @@ public class Battle : MonoBehaviour
                     if (fx.Type == FxType.FromTarget)
                     {
                         fxObj.transform.position = targetPos;
-                        fxObj.transform.rotation = Quaternion.AngleAxis(Utils.GetDirRotation(dir), Vector3.back);
+                        fxObj.transform.rotation = Quaternion.AngleAxis(ClientUtils.GetDirRotation(dir), Vector3.back);
                     }
                     else if (fx.Type == FxType.ToTarget)
                     {
@@ -283,33 +298,7 @@ public class Battle : MonoBehaviour
                         fxObj.transform.position = currentPos;
                     }
 
-                    animTimer = -fx.Pattern.Duration;
-                }
-            }
-            
-
-            if (action.ActionCost != null)
-            {
-                action.ActionCost.ApplyCost(turn, target);
-            }
-
-            foreach (GroundEffect effect in action.GroundEffects)
-            {
-                effect.apply(turn, target, dir);
-            }
-            
-            foreach(Position aoe in action.AoeTiles(turn, target, dir))
-            {
-                foreach (BattleEntity pokemon in turns)
-                {
-                    //todo ne pas toucher soi-même
-                    if (aoe.Equals(pokemon.CurrentPos))
-                    {
-                        foreach (HitEffect effect in action.HitEffects)
-                        {
-                            effect.apply(turn, pokemon, dir);
-                        }
-                    }
+                    animTimer = Mathf.Min(-(fx.Pattern.Duration + fx.Pattern.Delay), animTimer);
                 }
             }
         }
@@ -335,24 +324,27 @@ public class Battle : MonoBehaviour
         }
         highlightRange.Clear();
 
-        foreach (Position target in action.InRangeTiles(self))
+        if (action.TargetType != TargetType.None)
         {
-            var highlight = GameObject.Instantiate(Resources.Load("highlight")) as GameObject;
-            highlight.transform.position = new Vector3(tilesize * target.X, -tilesize * target.Y, 0);
-            highlightRange.Add(highlight);
-        }
+            foreach (Position target in action.InRangeTiles(self, arena))
+            {
+                var highlight = GameObject.Instantiate(Resources.Load("highlight")) as GameObject;
+                highlight.transform.position = new Vector3(tilesize * target.X, -tilesize * target.Y, 0);
+                highlightRange.Add(highlight);
+            }
 
-        foreach (Position target in action.InRange2Tiles(self))
-        {
-            var highlight = GameObject.Instantiate(Resources.Load("highlight2")) as GameObject;
-            highlight.transform.position = new Vector3(tilesize * target.X, -tilesize * target.Y, 0);
-            highlightRange.Add(highlight);
+            foreach (Position target in action.InRange2Tiles(self, arena))
+            {
+                var highlight = GameObject.Instantiate(Resources.Load("highlight2")) as GameObject;
+                highlight.transform.position = new Vector3(tilesize * target.X, -tilesize * target.Y, 0);
+                highlightRange.Add(highlight);
+            }
         }
     }
 
     private void HighlightAOE(BattleEntity self, Action action, Position target, Direction dir)
     {
-        foreach (Position aoe in action.AoeTiles(self, target, dir))
+        foreach (Position aoe in action.AoeTiles(self, target, dir, arena))
         {
             var aoeObj = GameObject.Instantiate(Resources.Load("aoe")) as GameObject;
             aoeObj.transform.position = new Vector3(tilesize * aoe.X, -tilesize * aoe.Y, 0);
@@ -362,104 +354,97 @@ public class Battle : MonoBehaviour
 
     private void displayGUI()
     {
-        GameObject canvas = GameObject.Find("Canvas");
-
-        foreach (Transform child in canvas.transform)
+        if (turns.Count > 0)
         {
-            GameObject.Destroy(child.gameObject);
-        }
+            GameObject canvas = GameObject.Find("Canvas");
 
-        //pokemons
-        int index = 0;
-        foreach(BattleEntity turn in turns)
-        {
-            var textObject = new GameObject("text");
-            textObject.transform.parent = canvas.transform;
-            textObject.transform.localPosition = new Vector3(160, 80 + index * 30, 0);
-            var textComp = textObject.AddComponent<Text>();
-            textComp.font = Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font;
-            textComp.text = turn.Pokemon.name + " " + turn.HP + "/" + turn.MaxHP;
+            foreach (Transform child in canvas.transform)
+            {
+                GameObject.Destroy(child.gameObject);
+            }
 
-            index++;
-        }
+            //pokemons
+            int index = 0;
+            foreach(BattleEntityClient turn in turns)
+            {
+                var textObject = new GameObject("text");
+                textObject.transform.parent = canvas.transform;
+                textObject.transform.localPosition = new Vector3(160, 80 + index * 30, 0);
+                var textComp = textObject.AddComponent<Text>();
+                textComp.font = Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font;
+                textComp.text = turn.Pokemon.name + " " + turn.HP + "/" + turn.MaxHP;
 
-        //attaques
-        index = 0;
-        foreach (Action action in turns[currentTurn].Actions)
-        {
+                index++;
+            }
 
-            var buttonObject= new GameObject("button");
-            buttonObject.transform.parent = canvas.transform;
-            buttonObject.transform.localPosition = new Vector3(-100 + index * 50, -200, 0);
-            var buttonComp = buttonObject.AddComponent<Button>();
-            int tmpIndex = index;
-            buttonComp.onClick.AddListener(delegate {
-                currentActionInt = tmpIndex;
-                HighlightAction(turns[currentTurn]);
-            });
+            //attaques
+            index = 0;
+            foreach (Action action in turns[currentTurn].Actions)
+            {
 
-            var imgComp = buttonObject.AddComponent<Image>();
-            imgComp.sprite = UnityEditor.AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UISprite.psd");
+                AddActionButton(canvas, action, index, false);
 
-            var textObject = new GameObject("text");
-            textObject.transform.parent = buttonObject.transform;
-            textObject.transform.localPosition = new Vector3(0, 0, 0);
+                index++;
+            }
 
-            var textComp = textObject.AddComponent<Text>();
-            textComp.alignment = TextAnchor.MiddleCenter;
-            textComp.font = Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font;
-            textComp.text = action.Name;
-            textComp.color = Color.black;
+            index = 0;
+            foreach (Action action in trainerActions)
+            {
 
+                AddActionButton(canvas, action, index, true);
 
-            buttonObject.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 50);
-            buttonObject.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 50);
-            textObject.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 50);
-            textObject.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 50);
-
-            index++;
+                index++;
+            }
         }
     }
 
-    private BattleEntity initPokemon(Pokemon pokemon, bool isAI)
+    private void AddActionButton(GameObject canvas, Action action, int index, bool isTrainer)
+    {
+        var buttonObject = new GameObject("button");
+        buttonObject.transform.parent = canvas.transform;
+        buttonObject.transform.localPosition = new Vector3(-100 + index * 50, isTrainer?-150:-200, 0);
+        var buttonComp = buttonObject.AddComponent<Button>();
+        int tmpIndex = index;
+        buttonComp.onClick.AddListener(delegate {
+            currentActionInt = tmpIndex;
+            isCurrentActionTrainer = isTrainer;
+            HighlightAction(turns[currentTurn]);
+        });
+
+        var imgComp = buttonObject.AddComponent<Image>();
+        imgComp.sprite = UnityEditor.AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UISprite.psd");
+
+        var textObject = new GameObject("text");
+        textObject.transform.parent = buttonObject.transform;
+        textObject.transform.localPosition = new Vector3(0, 0, 0);
+
+        var textComp = textObject.AddComponent<Text>();
+        textComp.alignment = TextAnchor.MiddleCenter;
+        textComp.font = Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font;
+        textComp.text = action.Name;
+        textComp.color = Color.black;
+
+
+        buttonObject.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 50);
+        buttonObject.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 50);
+        textObject.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 50);
+        textObject.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 50);
+    }
+
+
+    private BattleEntityClient initPokemon(int id, int pokemonId, Position pos)
     {
         var entitiesNode = GameObject.FindGameObjectWithTag("Entities");
-        GameObject pkmnObj = null;
 
-        //todo methode
-        switch (pokemon.Id)
-        {
-            case 0:
-                pkmnObj = GameObject.Instantiate(Resources.Load("Rattata")) as GameObject;
-                pkmnObj.name = "Rattata";
-                pkmnObj.transform.parent = entitiesNode.transform;
-                break;
-            case 1:
-                pkmnObj = GameObject.Instantiate(Resources.Load("Roucool")) as GameObject;
-                pkmnObj.name = "Roucool";
-                pkmnObj.transform.parent = entitiesNode.transform;
-                break;
-            case 2:
-                pkmnObj = GameObject.Instantiate(Resources.Load("Ptitard")) as GameObject;
-                pkmnObj.name = "Ptitard";
-                pkmnObj.transform.parent = entitiesNode.transform;
-                break;
-            default:
-                break;
+        var battleEntity = new BattleEntityClient(id, pokemonId, Global.Instance.PlayerId);
 
-        }
-
-        var battleEntity = new BattleEntity(arena, pkmnObj, isAI);
+        battleEntity.Pokemon.transform.parent = entitiesNode.transform;
 
         //todo attaques
-        battleEntity.Actions.Add(Moves.Get(Move.Move));
-        battleEntity.Actions.Add(Moves.Get(Move.Tackle));
-        battleEntity.Actions.Add(Moves.Get(Move.Gust));
-        battleEntity.Actions.Add(Moves.Get(Move.Bubble));
-        battleEntity.Actions.Add(Moves.Get(Move.Water_Gun));
-        battleEntity.Actions.Add(Moves.Get(Move.Thunder_Shock));
 
-        battleEntity.MoveBattleEntity(Position.Random(arena.Mapsize, arena.Mapsize));
+        entities.Add(id, battleEntity);
+
+        battleEntity.MoveBattleEntity(pos, arena.Tilesize);
 
         return battleEntity;
     }

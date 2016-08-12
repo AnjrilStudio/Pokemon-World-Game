@@ -1,78 +1,59 @@
-﻿using System;
+﻿using Anjril.PokemonWorld.Common;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using UnityEngine;
 
-class Moves
+
+class MoveFx
 {
-    private static Action[] moves = new Action[10];
+    private static List<FxDescriptor>[] movefx = new List<FxDescriptor>[10];
 
-    public static Action Get (Move move)
+    public static List<FxDescriptor> Get(Move move)
     {
-        if (moves[(int)move] == null)
+        if (movefx[(int)move] == null)
         {
             init(move);
         }
-        return moves[(int)move];
+        return movefx[(int)move];
+    }
+
+    public static List<FxDescriptor> Get(Action action)
+    {
+        return Get((Move)action.Id);
     }
 
     private static void init(Move move)
     {
-        Action action = null;
+        List<FxDescriptor> fx = new List<FxDescriptor>();
 
         switch (move)
         {
             case Move.Move:
-                action = new Action("Move");
-                action.TargetType = TargetType.Position;
-                action.Range = new DistanceMPRange(1);
-                action.Range2 = new DistanceMPAPRange(1);
-                action.GroundEffects.Add(new MoveEffect());
-                action.ActionCost = new MPAPDistanceActionCost(1);
-                action.NextTurn = false;
                 break;
 
             case Move.Tackle:
-                action = new Action("Tackle");
-                action.TargetType = TargetType.Position;
-                action.Range = new DistanceRange(3);
-                action.AreaOfEffect = new DistanceAreaOfEffect(1);
-                action.HitEffects.Add(new DamageEffect(40));
                 FxDescriptor fxTackle1 = new FxDescriptor("flame");
                 fxTackle1.Pattern = new ProjectileParticlePattern();
                 fxTackle1.Pattern.AddModifier(new RandomRotationModifier());
                 fxTackle1.Pattern.Duration = 0.5f;
                 fxTackle1.Type = FxType.ToTarget;
-                action.Fx.Add(fxTackle1);
+                fx.Add(fxTackle1);
                 FxDescriptor fxTackle2 = new FxDescriptor("flame"); //todo remplacer le delay par un "onDeath"
                 fxTackle2.Pattern = new ExplosionParticlePattern(1f);
                 fxTackle2.Pattern.AddModifier(new RandomRotationModifier());
                 fxTackle2.Pattern.Delay = 0.5f;
                 fxTackle2.Type = FxType.FromTarget;
-                action.Fx.Add(fxTackle2);
+                fx.Add(fxTackle2);
                 break;
 
             case Move.Gust:
-                action = new Action("Gust");
-                action.TargetType = TargetType.Directional;
-                action.Range = new LineRange(2);
-                action.AreaOfEffect = new LineAreaOfEffect(4);
-                action.HitEffects.Add(new PushEffect(1));
-                action.HitEffects.Add(new DamageEffect(50));
                 FxDescriptor fxGust = new FxDescriptor("flame");
                 fxGust.Pattern = new RandomLineParticlePattern(0.15f);
                 fxGust.Pattern.AddModifier(new RandomRotationModifier());
                 fxGust.Type = FxType.FromTarget;
-                action.Fx.Add(fxGust);
+                fx.Add(fxGust);
                 break;
             case Move.Bubble:
-                action = new Action("Bubble");
-                action.TargetType = TargetType.Directional;
-                action.Range = new LineRange(2);
-                action.AreaOfEffect = new LineAreaOfEffect(4);
-                action.HitEffects.Add(new PushEffect(1));
-                action.HitEffects.Add(new DamageEffect(50));
                 FxDescriptor fxBubble = new FxDescriptor("water1");
                 fxBubble.Pattern = new RandomLineParticlePattern(0.15f);
                 fxBubble.Pattern.AddModifier(new RandomScaleModifier(2f));
@@ -84,14 +65,9 @@ class Moves
                 fxBubble.Pattern.Duration = 1.2f;
                 fxBubble.Pattern.RotationSpeed = 0f;
                 fxBubble.Type = FxType.FromTarget;
-                action.Fx.Add(fxBubble);
+                fx.Add(fxBubble);
                 break;
             case Move.Water_Gun:
-                action = new Action("WaterGun");
-                action.TargetType = TargetType.Directional;
-                action.Range = new LineRange(1);
-                action.AreaOfEffect = new LineAreaOfEffect(5);
-                action.HitEffects.Add(new DamageEffect(50));
                 FxDescriptor fxWaterGun = new FxDescriptor("water2");
                 fxWaterGun.Pattern = new RandomLineParticlePattern(0.1f);
                 fxWaterGun.Pattern.Scale = 3f;
@@ -101,14 +77,9 @@ class Moves
                 fxWaterGun.Pattern.Duration = 1.2f;
                 fxWaterGun.Pattern.RotationSpeed = 0f;
                 fxWaterGun.Type = FxType.FromTarget;
-                action.Fx.Add(fxWaterGun);
+                fx.Add(fxWaterGun);
                 break;
             case Move.Thunder_Shock:
-                action = new Action("ThunderShock");
-                action.TargetType = TargetType.Position;
-                action.Range = new DistanceRange(5);
-                action.HitEffects.Add(new DamageEffect(40));
-
                 FxDescriptor fxThunderShock = new FxDescriptor("spark");
                 fxThunderShock.Pattern = new ProjectileArcParticlePattern(4f);
                 fxThunderShock.Pattern.Duration = 0.10f;
@@ -118,7 +89,7 @@ class Moves
                 fxThunderShock.Pattern.RotationSpeed = 0;
                 fxThunderShock.Pattern.AddModifier(new RandomRotationModifier());
                 fxThunderShock.Type = FxType.ToTarget;
-                action.Fx.Add(fxThunderShock);
+                fx.Add(fxThunderShock);
                 //TODO inventer le "repeat"
                 FxDescriptor fxThunderShock2 = new FxDescriptor("spark");
                 fxThunderShock2.Pattern = new ProjectileArcParticlePattern(-5f);
@@ -130,7 +101,7 @@ class Moves
                 fxThunderShock2.Pattern.RotationSpeed = 0;
                 fxThunderShock2.Pattern.AddModifier(new RandomRotationModifier());
                 fxThunderShock2.Type = FxType.ToTarget;
-                action.Fx.Add(fxThunderShock2);
+                fx.Add(fxThunderShock2);
 
                 FxDescriptor fxThunderShock3 = new FxDescriptor("spark");
                 fxThunderShock3.Pattern = new ProjectileArcParticlePattern(6f);
@@ -142,13 +113,13 @@ class Moves
                 fxThunderShock3.Pattern.RotationSpeed = 0;
                 fxThunderShock3.Pattern.AddModifier(new RandomRotationModifier());
                 fxThunderShock3.Type = FxType.ToTarget;
-                action.Fx.Add(fxThunderShock3);
+                fx.Add(fxThunderShock3);
                 break;
             default:
-                Debug.Log("ne doit pas arriver");
                 break;
         }
 
-        moves[(int)move] = action;
+        movefx[(int)move] = fx;
     }
 }
+

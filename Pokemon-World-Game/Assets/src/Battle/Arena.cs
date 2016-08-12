@@ -1,24 +1,23 @@
-﻿using System;
+﻿using Anjril.PokemonWorld.Common;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
 
-class Arena
+class Arena : BattleArena
 {
     public float Tilesize { get; private set; }
-    public int Mapsize { get; private set; }
     public GameObject[,] Tiles;
 
-    public Arena (float tilesize, int mapsize)
+    public Arena (int size, float tilesize) : base(size)
     {
         Tilesize = tilesize;
-        Mapsize = mapsize;
 
-        Tiles = new GameObject[mapsize, mapsize];
-        for (int i = 0; i < mapsize; i++)
+        Tiles = new GameObject[ArenaSize, ArenaSize];
+        for (int i = 0; i < ArenaSize; i++)
         {
-            for (int j = 0; j < mapsize; j++)
+            for (int j = 0; j < ArenaSize; j++)
             {
                 var obj = GameObject.Instantiate(Resources.Load("ground/ground")) as GameObject;
                 var mapNode = GameObject.FindGameObjectWithTag("Arena");

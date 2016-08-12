@@ -3,11 +3,12 @@ using System;
 using Anjril.Common.Network;
 using Anjril.Common.Network.TcpImpl;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement;
+using Anjril.PokemonWorld.Common.State;
 
 public class Map : MonoBehaviour {
 
     private MapEntity player;
-    private int playerId;
     private float tilesize = 0.32f;
     private float tileZLayerFactor = 0.10f;
 
@@ -26,46 +27,19 @@ public class Map : MonoBehaviour {
     private Dictionary<Int32,MapEntity> mapEntities;
     
     private float moveInputDelay = 0.3f;
-    
-    private ISocketClient client;
 
     private bool upWasUp = false;
     private bool downWasUp = false;
     private bool rightWasUp = false;
     private bool leftWasUp = false;
     private Direction lastInput = Direction.None;
-
-    private int nbMsgReceived = 0;
-    private string[] messages;
-    private string jsonMap;
+    
 
     private GameObject entitiesNode;
-    
-    public int port;
-
-    private int messageCount = 0;
-    
-
 
     // Use this for initialization
     void Start () {
-        
-        client = new TcpSocketClient(port, "<sep>");
-        string rep = client.Connect("127.0.0.1", 1337, MessageReceived, "jpiji");
-
-        Debug.Log("connect " + rep);
-        playerId = Int32.Parse(rep.Split(':')[1]);
-
-
-        /*client = new UdpClient(1337);
-        var receiver = new UdpReceiver(client);
-        var sender = new UdpSender(client);
-        socket = new Anjril.Common.Network.Socket(receiver, sender, MessageReceived);
-        socket.StartListening();
-        socket.Send("login", connection);
-        mapLoaded = false;*/
-
-        jsonMap = Resources.Load("map").ToString();
+        Global.Instance.InitClient();
 
         entitiesNode = GameObject.FindGameObjectWithTag("Entities");
 
@@ -79,65 +53,16 @@ public class Map : MonoBehaviour {
 
     }
 
-    private void MessageReceived(IRemoteConnection sender, string message)
-    {
-        messageCount++;
-        if (messageCount < 10)
-        {
-            Debug.Log("received " + message);
-        }
-
-        if (jsonMap == null)
-        {
-            var currentId = int.Parse(message.Split(':')[0]);
-            var totalMessage = int.Parse(message.Split(':')[1].Split('|')[0]);
-            var trueMessage = message.Split('|')[1];
-
-            if (messages == null)
-            {
-                messages = new string[totalMessage];
-            }
-
-            nbMsgReceived++;
-            messages[currentId] = trueMessage;
-
-            if (nbMsgReceived == totalMessage)
-            {
-                jsonMap = String.Join("", messages);
-            }
-        }
-
-        var prefix = "entities:";
-        if (message.StartsWith(prefix))
-        {
-            var entities = message.Remove(0,prefix.Length);
-            var entitiesCount = entities.Split(';').Length - 1;
-            for (int i = 0; i < entitiesCount; i++)
-            {
-                var entityStr = message.Split(';')[i];
-
-                MoveMessage move = new MoveMessage(entityStr);
-
-                Global.Instance.MoveMessages.Enqueue(move);
-               
-            }
-        }
-
-        prefix = "map:";
-        if (message.StartsWith(prefix))
-        {
-            Debug.Log("map received");
-            var map = message.Remove(0, prefix.Length);
-            var origin = map.Split('+')[0];
-            var segments = map.Split('+')[1];
-            var originPos = new Position(Int32.Parse(origin.Split(':')[0]), Int32.Parse(origin.Split(':')[1]));
-
-            Global.Instance.MapMessages.Enqueue(new MapMessage(originPos, segments));
-        }
-    }
-
     // Update is called once per frame
     void Update() {
+
+        if (Global.Instance.BattleStartMessages.Count > 0)
+        {
+            BattleStartMessage message = Global.Instance.BattleStartMessages.Dequeue();
+            //todo animation exclamation sur les entités
+            //todo animation cool de lancement de fight
+            SceneManager.LoadScene("scene_battle");
+        }
 
         updateEntities();
             
@@ -216,11 +141,11 @@ public class Map : MonoBehaviour {
                 {
                     if (lastInput != moveDir) //turn
                     {
-                        client.Send("trn/" + playerId + "," + moveDir.ToString());
+                        Global.Instance.Client.Send("trn/" + Global.Instance.PlayerId + "," + moveDir.ToString());
                         //Debug.Log("turn sent : " + moveDir.ToString());
                     } else //move
                     {
-                        client.Send("mov/" + playerId + "," + moveDir.ToString());
+                        Global.Instance.Client.Send("mov/" + Global.Instance.PlayerId + "," + moveDir.ToString());
                         //Debug.Log("move sent : " + moveDir.ToString());
 
                         //moveInput = false; //empêche l'envoie de plus d'une direction
@@ -235,6 +160,19 @@ public class Map : MonoBehaviour {
                 downWasUp = !down;
                 leftWasUp = !left;
                 rightWasUp = !right;
+
+                if (Input.GetKeyDown(KeyCode.Space)){
+                    var dirPos = Utils.GetDirPosition(player.CurrentDir);
+                    var otherPos = new Position(player.CurrentPos.X + dirPos.X, player.CurrentPos.Y - dirPos.Y);
+                    Debug.Log(player.CurrentPos);
+                    Debug.Log(otherPos);
+                    if (entityMatrix[otherPos.X, otherPos.Y] != null)
+                    {
+                        Debug.Log("battle");
+                        Global.Instance.Client.Send("btl/" + Global.Instance.PlayerId);
+                    }
+                    
+                }
             }
 
             //deplacement camera
@@ -254,25 +192,12 @@ public class Map : MonoBehaviour {
                 entity.CurrentPos = new Position(x, y);
                 entityMatrix[entity.CurrentPos.X, entity.CurrentPos.Y] = entity;
             }
-            else
-            {
-                if (entity.IA == false && entityMatrix[x, y].IA == true)
-                {
-                    Debug.Log("fight");
-                    //à recevoir du serveur
-                    ApplicationModel.otherBattleStartEntities.Clear();
-                    ApplicationModel.otherBattleStartEntities.Add(entityMatrix[x, y]);
-                    ApplicationModel.playerBattleStartEntity = entity;
-                    ApplicationModel.playerBattleStartPos = new Position(entity.CurrentPos);
-                    Application.LoadLevel("scene_battle");
-                }
-            }
         }
     }
 
     private void OnApplicationQuit() {
         Debug.Log("quit");
-        client.Disconnect(playerId.ToString());
+        Global.Instance.Client.Disconnect(Global.Instance.PlayerId.ToString());
     }
 
     private void loadMap(Position origin, string segments)
@@ -840,7 +765,7 @@ public class Map : MonoBehaviour {
                 if (message.IsPlayer)
                 {
                     entity = spawnPlayerCharacter(message.Id, message.Position);
-                    if (entity.Id == playerId)
+                    if (entity.Id == Global.Instance.PlayerId)
                     {
                         player = entity;
                     }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Anjril.PokemonWorld.Common.State;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -19,7 +20,7 @@ class ChunkMatrix<T>
     {
         get
         {
-            var segment = Position.GetSegment(x, y, chunksize);
+            var segment = GetSegment(x, y, chunksize);
             if (!chunks.ContainsKey(segment))
             {
                 return default(T);
@@ -32,7 +33,7 @@ class ChunkMatrix<T>
 
         set
         {
-            var segment = Position.GetSegment(x, y, chunksize);
+            var segment = GetSegment(x, y, chunksize);
             if (!chunks.ContainsKey(segment))
             {
                 chunks.Add(segment, new T[chunksize, chunksize]);
@@ -41,6 +42,14 @@ class ChunkMatrix<T>
             var chunk = chunks[segment];
             chunk[x % chunksize, y % chunksize] = value;
         }
+    }
+
+    private static Position GetSegment(int x, int y, int chunksize)
+    {
+        var px = x / chunksize;
+        var py = y / chunksize;
+
+        return new Position(px, py);
     }
 
 }

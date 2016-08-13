@@ -152,12 +152,12 @@ public class Battle : MonoBehaviour
                 mousex = Input.mousePosition.x - p.x;
                 mousey = Input.mousePosition.y - p.y;
 
-                var factor = 250 * tilesize / camera.orthographicSize; // comprendre 250 ?
-                x0 = mousex + factor * mapsize / 2;
-                y0 = mousey + factor * mapsize / 2;
+                Vector3 p2 = camera.ViewportToWorldPoint(new Vector3(mousex, mousey, 10));
+                var x0 = p2.x / tilesize / Screen.width;
+                var y0 = -p2.y / tilesize / Screen.height;
 
-                var mousetileposx = Mathf.FloorToInt(x0 / (80 / camera.orthographicSize)); //comprendre 80 ?
-                var mousetileposy = mapsize - (Mathf.FloorToInt(y0 / (80 / camera.orthographicSize)) + 1);
+                var mousetileposx = Mathf.FloorToInt(x0) + arena.ArenaSize / 2;
+                var mousetileposy = Mathf.FloorToInt(y0) + arena.ArenaSize / 2;
                 mouseTilePos = new Position(mousetileposx, mousetileposy);
 
                 //hover
@@ -447,5 +447,11 @@ public class Battle : MonoBehaviour
         battleEntity.MoveBattleEntity(pos, arena.Tilesize);
 
         return battleEntity;
+    }
+
+    private void OnApplicationQuit()
+    {
+        Debug.Log("quit");
+        Global.Instance.Client.Disconnect(Global.Instance.PlayerId.ToString());
     }
 }

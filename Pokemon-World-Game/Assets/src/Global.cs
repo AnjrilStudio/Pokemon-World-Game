@@ -52,6 +52,7 @@ class Global
             Settings.Default.ClientPort = port;
             Client = new TcpSocketClient();
             string rep = Client.Connect("127.0.0.1", 1337, MessageReceived, "jpiji");
+            //string rep = Client.Connect("192.168.1.23", 1337, MessageReceived, "jpiji");
 
             Debug.Log("connect " + rep);
             PlayerId = Int32.Parse(rep.Split(':')[1]);
@@ -87,6 +88,8 @@ class Global
         {
             Debug.Log("map received");
             var map = message.Remove(0, prefix.Length);
+
+            //Debug.Log(map);
             var origin = map.Split('+')[0];
             var segments = map.Split('+')[1];
             var originPos = new Position(Int32.Parse(origin.Split(':')[0]), Int32.Parse(origin.Split(':')[1]));

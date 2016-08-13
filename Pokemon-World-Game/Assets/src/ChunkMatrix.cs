@@ -48,6 +48,8 @@ class ChunkMatrix<T>
     {
         var px = x / chunksize;
         var py = y / chunksize;
+        if (x < 0) px--;
+        if (y < 0) py--;
 
         return new Position(px, py);
     }

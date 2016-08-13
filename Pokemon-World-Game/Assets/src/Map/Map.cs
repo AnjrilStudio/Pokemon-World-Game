@@ -214,7 +214,7 @@ public class Map : MonoBehaviour {
             if (groundMatrix[i, j] == 0)
             {
                 var tmp = s.Split('.');
-                int ground = int.Parse(tmp[0]) + 1;
+                int ground = int.Parse(tmp[0]);
 
                 groundMatrix[i, j] = ground;
 
@@ -232,18 +232,22 @@ public class Map : MonoBehaviour {
                     case 4:
                         grdObj = GameObject.Instantiate(Resources.Load("sand/sand")) as GameObject;
                         break;
-                    default:
                     case 5:
                         grdObj = GameObject.Instantiate(Resources.Load("road")) as GameObject;
+                        break;
+                    default:
+                        grdObj = null;
                         break;
 
                 }
 
-                grdObj.transform.parent = mapNode.transform;
-                grdObj.transform.position = new Vector3(tilesize * i, -tilesize * j, 0 - j * tileZLayerFactor);
-                grdObj.SetActive(true);
-                mapMatrix[i, j] = grdObj;
-
+                if (grdObj != null)
+                {
+                    grdObj.transform.parent = mapNode.transform;
+                    grdObj.transform.position = new Vector3(tilesize * i, -tilesize * j, 0 - j * tileZLayerFactor);
+                    grdObj.SetActive(true);
+                    mapMatrix[i, j] = grdObj;
+                }
 
                 int mapObj = int.Parse(tmp[1]);
                 switch (mapObj)

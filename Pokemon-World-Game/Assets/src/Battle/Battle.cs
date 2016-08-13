@@ -4,6 +4,7 @@ using UnityEngine.UI;
 using Anjril.PokemonWorld.Common;
 using Anjril.PokemonWorld.Common.State;
 using UnityEngine.SceneManagement;
+using Anjril.PokemonWorld.Common.Parameter;
 
 public class Battle : MonoBehaviour
 {
@@ -108,7 +109,7 @@ public class Battle : MonoBehaviour
 
                     if (battleaction.Action != null)
                     {
-                        Debug.Log(animTimer);
+                        //Debug.Log(animTimer);
                         PlayTurn(turns[currentTurn], battleaction.Target, battleaction.Action, battleaction.Dir);
                     }
 
@@ -122,7 +123,8 @@ public class Battle : MonoBehaviour
                         }
                         else
                         {
-                            var pkmn = initPokemon(entity.Id, entity.PokemonId, entity.CurrentPos);
+                            Debug.Log("new entity : " + entity.PlayerId);
+                            var pkmn = initPokemon(entity.Id, entity.PokemonId, entity.CurrentPos, entity.PlayerId);
                             pkmn.HP = entity.HP;
                             pkmn.MaxHP = entity.MaxHP;
                             turns.Add(pkmn);
@@ -131,6 +133,7 @@ public class Battle : MonoBehaviour
 
                     currentActionNumber++;
                     currentTurn = battlestate.CurrentTurn;
+                    UpdateTrainerActions(battleaction.ActionsAvailable);
                     displayGUI();
                 }
                 
@@ -255,10 +258,10 @@ public class Battle : MonoBehaviour
                 {
                     if (isCurrentActionTrainer)
                     {
-                        Global.Instance.Client.Send("tra/" + Global.Instance.PlayerId + "," + currentTurn + "," + mouseTilePos.ToString() + "," + CurrentAction.Id);
+                        Global.Instance.SendCommand(new BattleTrainerActionParam(currentTurn, mouseTilePos, CurrentAction));
                     } else
                     {
-                        Global.Instance.Client.Send("act/" + Global.Instance.PlayerId + "," + currentTurn + "," + mouseTilePos.ToString() + "," + CurrentAction.Id + "," + currentActionDir.ToString());
+                        Global.Instance.SendCommand(new BattleActionParam(currentActionDir, currentTurn, mouseTilePos, CurrentAction));
                     }
                     
                 }
@@ -378,22 +381,25 @@ public class Battle : MonoBehaviour
             }
 
             //attaques
-            index = 0;
-            foreach (Action action in turns[currentTurn].Actions)
+            if (turns[currentTurn].PlayerId == Global.Instance.PlayerId)
             {
+                index = 0;
+                foreach (Action action in turns[currentTurn].Actions)
+                {
 
-                AddActionButton(canvas, action, index, false);
+                    AddActionButton(canvas, action, index, false);
 
-                index++;
-            }
+                    index++;
+                }
 
-            index = 0;
-            foreach (Action action in trainerActions)
-            {
+                index = 0;
+                foreach (Action action in trainerActions)
+                {
 
-                AddActionButton(canvas, action, index, true);
+                    AddActionButton(canvas, action, index, true);
 
-                index++;
+                    index++;
+                }
             }
         }
     }
@@ -432,11 +438,11 @@ public class Battle : MonoBehaviour
     }
 
 
-    private BattleEntityClient initPokemon(int id, int pokemonId, Position pos)
+    private BattleEntityClient initPokemon(int id, int pokemonId, Position pos, int playerId)
     {
         var entitiesNode = GameObject.FindGameObjectWithTag("Entities");
 
-        var battleEntity = new BattleEntityClient(id, pokemonId, Global.Instance.PlayerId);
+        var battleEntity = new BattleEntityClient(id, pokemonId, playerId);
 
         battleEntity.Pokemon.transform.parent = entitiesNode.transform;
 
@@ -447,6 +453,15 @@ public class Battle : MonoBehaviour
         battleEntity.MoveBattleEntity(pos, arena.Tilesize);
 
         return battleEntity;
+    }
+
+    private void UpdateTrainerActions(List<TrainerAction> actions)
+    {
+        trainerActions.Clear();
+        foreach (TrainerAction action in actions)
+        {
+            trainerActions.Add(TrainerActions.Get(action));
+        }
     }
 
     private void OnApplicationQuit()

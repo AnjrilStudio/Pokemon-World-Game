@@ -2,6 +2,7 @@
 using Anjril.Common.Network;
 using Anjril.Common.Network.TcpImpl;
 using Anjril.Common.Network.TcpImpl.Properties;
+using Anjril.PokemonWorld.Common.Parameter;
 using Anjril.PokemonWorld.Common.State;
 using System;
 using System.Collections.Generic;
@@ -57,6 +58,11 @@ class Global
             Debug.Log("connect " + rep);
             PlayerId = Int32.Parse(rep.Split(':')[1]);
         }
+    }
+
+    public void SendCommand(BaseParam param)
+    {
+        Client.Send(param.ToString());
     }
 
     private void MessageReceived(IRemoteConnection sender, string message)

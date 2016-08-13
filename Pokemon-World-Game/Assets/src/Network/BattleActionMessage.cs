@@ -7,6 +7,7 @@ using System.Text;
 class BattleActionMessage
 {
     public int ActionId { get; private set; }
+    public List<TrainerAction> ActionsAvailable { get; private set; }
     public Position Target { get; private set; }
     public Action Action { get; private set; }
     public Direction Dir { get; private set; }
@@ -17,7 +18,14 @@ class BattleActionMessage
         var actionId = battleStr.Split('=')[0];
         ActionId = System.Int32.Parse(actionId);
 
-        var actionStr = battleStr.Split('=')[1];
+        ActionsAvailable = new List<TrainerAction>();
+        var actionAvailStr = battleStr.Split('=')[1];
+        for (int i = 0; i < actionAvailStr.Split(',').Count(); i++)
+        {
+            ActionsAvailable.Add((TrainerAction)(System.Int32.Parse(actionAvailStr.Split(',')[i])));
+        }
+
+        var actionStr = battleStr.Split('=')[2];
         if (actionStr != "0")
         {
             Target = new Position(actionStr.Split(',')[0]);
@@ -25,7 +33,7 @@ class BattleActionMessage
             Dir = Utils.DirectionFromString(actionStr.Split(',')[2]);
         }
 
-        var stateStr = battleStr.Split('=')[2];
+        var stateStr = battleStr.Split('=')[3];
         if (stateStr != "0")
         {
             State = new BattleStateMessage(stateStr);

@@ -5,6 +5,7 @@ using Anjril.Common.Network.TcpImpl;
 using System.Collections.Generic;
 using UnityEngine.SceneManagement;
 using Anjril.PokemonWorld.Common.State;
+using Anjril.PokemonWorld.Common.Parameter;
 
 public class Map : MonoBehaviour {
 
@@ -141,11 +142,11 @@ public class Map : MonoBehaviour {
                 {
                     if (lastInput != moveDir) //turn
                     {
-                        Global.Instance.Client.Send("trn/" + Global.Instance.PlayerId + "," + moveDir.ToString());
+                        Global.Instance.SendCommand(new TurnParam(moveDir));
                         //Debug.Log("turn sent : " + moveDir.ToString());
                     } else //move
                     {
-                        Global.Instance.Client.Send("mov/" + Global.Instance.PlayerId + "," + moveDir.ToString());
+                        Global.Instance.SendCommand(new MoveParam(moveDir));
                         //Debug.Log("move sent : " + moveDir.ToString());
 
                         //moveInput = false; //empêche l'envoie de plus d'une direction
@@ -169,7 +170,8 @@ public class Map : MonoBehaviour {
                     if (entityMatrix[otherPos.X, otherPos.Y] != null)
                     {
                         Debug.Log("battle");
-                        Global.Instance.Client.Send("btl/" + Global.Instance.PlayerId);
+                        Global.Instance.Client.Send("btl/");
+                        Global.Instance.SendCommand(new BattleStartParam());
                     }
                     
                 }

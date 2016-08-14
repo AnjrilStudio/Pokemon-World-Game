@@ -435,7 +435,14 @@ public class Battle : MonoBehaviour
         buttonComp.onClick.AddListener(delegate {
             currentActionInt = tmpIndex;
             isCurrentActionTrainer = isTrainer;
-            HighlightAction(turns[currentTurn]);
+            if (turns.Count > 0)
+            {
+                HighlightAction(turns[currentTurn]);
+            } else
+            {
+                HighlightAction(new BattleEntity(0, 0, Global.Instance.PlayerId));
+            }
+            
         });
 
         var imgComp = buttonObject.AddComponent<Image>();

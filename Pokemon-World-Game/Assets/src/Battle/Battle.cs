@@ -103,13 +103,11 @@ public class Battle : MonoBehaviour
                     battleaction = Global.Instance.BattleActionMessages.Dequeue();
                     if (battleaction.State == null)
                     {
-                        Debug.Log("endbattle");
                         SceneManager.LoadScene("scene_map");
                     }
 
                     if (battleaction.Action != null)
                     {
-                        //Debug.Log(animTimer);
                         PlayTurn(turns[currentTurn], battleaction.Target, battleaction.Action, battleaction.Dir);
                     }
 
@@ -123,14 +121,13 @@ public class Battle : MonoBehaviour
                         }
                         else
                         {
-                            Debug.Log("new entity : " + entity.PlayerId);
                             var pkmn = initPokemon(entity.Id, entity.PokemonId, entity.CurrentPos, entity.PlayerId);
                             pkmn.HP = entity.HP;
                             pkmn.MaxHP = entity.MaxHP;
                             turns.Add(pkmn);
                         }
                     }
-
+                    
                     currentActionNumber++;
                     currentTurn = battlestate.CurrentTurn;
                     UpdateTrainerActions(battleaction.ActionsAvailable);
@@ -138,133 +135,134 @@ public class Battle : MonoBehaviour
                 }
                 
             }
-            
+
+            //par defaut
+            BattleEntity turn = new BattleEntity(0, 0, Global.Instance.PlayerId);
 
             if (turns.Count > 0)
             {
+                turn = turns[currentTurn];
+            }
 
-                BattleEntity turn = turns[currentTurn];
+            bool inRange = false;
+            bool inRange2 = false;
 
-                bool inRange = false;
-                bool inRange2 = false;
+            //pointer control
+            Camera camera = GetComponent<Camera>();
+            Vector3 p = camera.WorldToScreenPoint(gameObject.transform.position);
 
-                //pointer control
-                Camera camera = GetComponent<Camera>();
-                Vector3 p = camera.WorldToScreenPoint(gameObject.transform.position);
+            mousex = Input.mousePosition.x - p.x;
+            mousey = Input.mousePosition.y - p.y;
 
-                mousex = Input.mousePosition.x - p.x;
-                mousey = Input.mousePosition.y - p.y;
+            Vector3 p2 = camera.ViewportToWorldPoint(new Vector3(mousex, mousey, 10));
+            var x0 = p2.x / tilesize / Screen.width;
+            var y0 = -p2.y / tilesize / Screen.height;
 
-                Vector3 p2 = camera.ViewportToWorldPoint(new Vector3(mousex, mousey, 10));
-                var x0 = p2.x / tilesize / Screen.width;
-                var y0 = -p2.y / tilesize / Screen.height;
+            var mousetileposx = Mathf.FloorToInt(x0) + arena.ArenaSize / 2;
+            var mousetileposy = Mathf.FloorToInt(y0) + arena.ArenaSize / 2;
+            mouseTilePos = new Position(mousetileposx, mousetileposy);
 
-                var mousetileposx = Mathf.FloorToInt(x0) + arena.ArenaSize / 2;
-                var mousetileposy = Mathf.FloorToInt(y0) + arena.ArenaSize / 2;
-                mouseTilePos = new Position(mousetileposx, mousetileposy);
+            //hover
+            if (mouseTilePos.X >= 0 && mouseTilePos.X < mapsize && mouseTilePos.Y >= 0 && mouseTilePos.Y < mapsize)
+            {
+                //pointer tile
+                hover.transform.position = new Vector3(tilesize * mouseTilePos.X, -tilesize * mouseTilePos.Y, 0);
+                hover.SetActive(true);
 
-                //hover
-                if (mouseTilePos.X >= 0 && mouseTilePos.X < mapsize && mouseTilePos.Y >= 0 && mouseTilePos.Y < mapsize)
+                //todo faire que si la case change
+                foreach (GameObject obj in highlightAOE)
                 {
-                    //pointer tile
-                    hover.transform.position = new Vector3(tilesize * mouseTilePos.X, -tilesize * mouseTilePos.Y, 0);
-                    hover.SetActive(true);
+                    Destroy(obj);
+                }
+                highlightAOE.Clear();
 
-                    //todo faire que si la case change
-                    foreach (GameObject obj in highlightAOE)
+                if (CurrentAction != null)
+                {
+
+                    if (CurrentAction.TargetType == TargetType.None)
                     {
-                        Destroy(obj);
+                        inRange = true;
                     }
-                    highlightAOE.Clear();
-
-                    if (CurrentAction != null)
+                    else
                     {
-
-                        if (CurrentAction.TargetType == TargetType.None)
+                        //aoe
+                        Position target = mouseTilePos;
+                        if (CurrentAction.TargetType == TargetType.Position)
                         {
-                            inRange = true;
-                        }
-                        else
-                        {
-                            //aoe
-                            Position target = mouseTilePos;
-                            if (CurrentAction.TargetType == TargetType.Position)
+                            currentActionDir = Direction.None;
+                            if (CurrentAction.Range.InRange(arena, turn, target))
                             {
-                                currentActionDir = Direction.None;
-                                if (CurrentAction.Range.InRange(arena, turn, target))
+                                inRange = true;
+                            }
+                            if (CurrentAction.Range2 != null && CurrentAction.Range2.InRange(arena, turn, target))
+                            {
+                                inRange2 = true;
+                            }
+                        }
+
+                        if (CurrentAction.TargetType == TargetType.Directional)
+                        {
+                            foreach (Direction dir in System.Enum.GetValues(typeof(Direction)))
+                            {
+                                if (CurrentAction.Range.InRange(arena, turn, target, dir))
                                 {
+                                    currentActionDir = dir;
                                     inRange = true;
                                 }
-                                if (CurrentAction.Range2 != null && CurrentAction.Range2.InRange(arena, turn, target))
+                                if (CurrentAction.Range2 != null && CurrentAction.Range2.InRange(arena, turn, target, dir))
                                 {
+                                    currentActionDir = dir;
                                     inRange2 = true;
                                 }
                             }
-
-                            if (CurrentAction.TargetType == TargetType.Directional)
-                            {
-                                foreach (Direction dir in System.Enum.GetValues(typeof(Direction)))
-                                {
-                                    if (CurrentAction.Range.InRange(arena, turn, target, dir))
-                                    {
-                                        currentActionDir = dir;
-                                        inRange = true;
-                                    }
-                                    if (CurrentAction.Range2 != null && CurrentAction.Range2.InRange(arena, turn, target, dir))
-                                    {
-                                        currentActionDir = dir;
-                                        inRange2 = true;
-                                    }
-                                }
-                            }
-                            if (inRange || inRange2)
-                            {
-                                HighlightAOE(turn, CurrentAction, target, currentActionDir);
-                            }
+                        }
+                        if (inRange || inRange2)
+                        {
+                            HighlightAOE(turn, CurrentAction, target, currentActionDir);
                         }
                     }
                 }
-                else
-                {
-                    hover.SetActive(false);
-                }
+            }
+            else
+            {
+                hover.SetActive(false);
+            }
 
                 
-                //action control
-                //var highlight = CurrentAction != null;
-                var highlight = false;
-                if (Input.GetKeyDown(KeyCode.Alpha1))
-                {
-                    currentActionInt = 0;
-                    highlight = true;
-                }
-                if (Input.GetKeyDown(KeyCode.Alpha2))
-                {
-                    currentActionInt = 1;
-                    highlight = true;
-                }
-                if (Input.GetKeyDown(KeyCode.Alpha3))
-                {
-                    currentActionInt = 2;
-                    highlight = true;
-                }
-                if (highlight)
-                {
-                    HighlightAction(turn);
-                }
+            //action control
+            //var highlight = CurrentAction != null;
+            var highlight = false;
+            if (Input.GetKeyDown(KeyCode.Alpha1))
+            {
+                currentActionInt = 0;
+                highlight = true;
+            }
+            if (Input.GetKeyDown(KeyCode.Alpha2))
+            {
+                currentActionInt = 1;
+                highlight = true;
+            }
+            if (Input.GetKeyDown(KeyCode.Alpha3))
+            {
+                currentActionInt = 2;
+                highlight = true;
+            }
+            if (highlight)
+            {
+                HighlightAction(turn);
+            }
             
-                //click control
-                if ((inRange || inRange2) && Input.GetMouseButtonDown(0) && hover.activeSelf && CurrentAction != null)
+            //click control
+            if ((inRange || inRange2) && Input.GetMouseButtonDown(0) && hover.activeSelf && CurrentAction != null)
+            {
+                if (isCurrentActionTrainer)
                 {
-                    if (isCurrentActionTrainer)
-                    {
-                        Global.Instance.SendCommand(new BattleTrainerActionParam(currentTurn, mouseTilePos, CurrentAction));
-                    } else
-                    {
-                        Global.Instance.SendCommand(new BattleActionParam(currentActionDir, currentTurn, mouseTilePos, CurrentAction));
-                    }
-                    
+                    Global.Instance.SendCommand(new BattleTrainerActionParam(currentTurn, mouseTilePos, CurrentAction));
+                } else
+                {
+                    Global.Instance.SendCommand(new BattleActionParam(currentActionDir, currentTurn, mouseTilePos, CurrentAction));
                 }
+                    
             }
         }
     }
@@ -380,16 +378,32 @@ public class Battle : MonoBehaviour
                 index++;
             }
 
+
+
             //attaques
-            if (turns[currentTurn].PlayerId == Global.Instance.PlayerId)
+            if (GetPlayerPokemonCount() == 0)
             {
                 index = 0;
-                foreach (Action action in turns[currentTurn].Actions)
+                foreach (Action action in trainerActions)
                 {
 
-                    AddActionButton(canvas, action, index, false);
+                    AddActionButton(canvas, action, index, true);
 
                     index++;
+                }
+            }
+            else if (turns[currentTurn].PlayerId == Global.Instance.PlayerId)
+            {
+                if (turns.Count > 1)
+                {
+                    index = 0;
+                    foreach (Action action in turns[currentTurn].Actions)
+                    {
+
+                        AddActionButton(canvas, action, index, false);
+
+                        index++;
+                    }
                 }
 
                 index = 0;
@@ -402,6 +416,19 @@ public class Battle : MonoBehaviour
                 }
             }
         }
+    }
+
+    private int GetPlayerPokemonCount()
+    {
+        int result = 0;
+        foreach (BattleEntityClient entity in turns)
+        {
+            if (entity.PlayerId == Global.Instance.PlayerId)
+            {
+                result++;
+            }
+        }
+        return result;
     }
 
     private void AddActionButton(GameObject canvas, Action action, int index, bool isTrainer)

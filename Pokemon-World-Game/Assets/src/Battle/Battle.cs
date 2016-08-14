@@ -17,8 +17,11 @@ public class Battle : MonoBehaviour
     public int currentTurn = 0;
     private int currentActionNumber = -1;
 
+    List<Pokemon> Team;
     private List<Action> trainerActions;
     private bool isCurrentActionTrainer;
+    private bool isPokemonGoAction;
+    private bool isPokemonGoSelection;
 
     public GameObject hover;
     private List<GameObject> highlightRange;
@@ -35,14 +38,20 @@ public class Battle : MonoBehaviour
         get
         {
             if (currentActionInt < 0) return null;
-            if (isCurrentActionTrainer)
+            if (isCurrentActionTrainer || isPokemonGoSelection)
             {
-                return trainerActions[currentActionInt];
+                if (!isPokemonGoAction)
+                {
+                    return trainerActions[currentActionInt];
+                } else
+                {
+                    return TrainerActions.Get(TrainerAction.Pokemon_Go);
+                }
+                    
             } else
             {
                 return turns[currentTurn].Actions[currentActionInt];
             }
-            
         }
     }
     private Direction currentActionDir;
@@ -55,7 +64,10 @@ public class Battle : MonoBehaviour
     void Start()
     {
         //todo recevoir les infos du serveur
-        
+        Team = new List<Pokemon>();
+        Team.Add(new Pokemon(1, 5));
+        Team.Add(new Pokemon(2, 5));
+
         mouseTilePos = new Position(0, 0);
 
         arena = new Arena(mapsize, 0.32f);
@@ -78,6 +90,8 @@ public class Battle : MonoBehaviour
         displayGUI();
 
         isCurrentActionTrainer = false;
+        isPokemonGoAction = false;
+        isPokemonGoSelection = false;
         currentActionInt = -1;
         //HighlightAction(playerTurn);
     }
@@ -111,9 +125,12 @@ public class Battle : MonoBehaviour
                         PlayTurn(turns[currentTurn], battleaction.Target, battleaction.Action, battleaction.Dir);
                     }
 
+
+                    List<int> actualEntities = new List<int>();
                     BattleStateMessage battlestate = battleaction.State;
                     foreach (BattleStateEntity entity in battlestate.Entities)
                     {
+                        actualEntities.Add(entity.Id);
                         if (entities.ContainsKey(entity.Id))
                         {
                             var battleEntity = entities[entity.Id];
@@ -127,11 +144,30 @@ public class Battle : MonoBehaviour
                             turns.Add(pkmn);
                         }
                     }
+
+                    List<int> entitiesToRemove = new List<int>();
+                    foreach (int id in entities.Keys)
+                    {
+                        if (!actualEntities.Contains(id))
+                        {
+                            entitiesToRemove.Add(id);
+                        }
+                    }
+
+                    foreach(int id in entitiesToRemove)
+                    {
+                        RemovePokemon(id);
+                    }
                     
                     currentActionNumber++;
                     currentTurn = battlestate.CurrentTurn;
+
                     UpdateTrainerActions(battleaction.ActionsAvailable);
+                    isCurrentActionTrainer = false;
+                    isPokemonGoAction = false;
+                    isPokemonGoSelection = false;
                     displayGUI();
+                    ClearHighlight();
                 }
                 
             }
@@ -255,12 +291,12 @@ public class Battle : MonoBehaviour
             //click control
             if ((inRange || inRange2) && Input.GetMouseButtonDown(0) && hover.activeSelf && CurrentAction != null)
             {
-                if (isCurrentActionTrainer)
+                if (isCurrentActionTrainer || isPokemonGoSelection)
                 {
-                    Global.Instance.SendCommand(new BattleTrainerActionParam(currentTurn, mouseTilePos, CurrentAction));
+                    Global.Instance.SendCommand(new BattleTrainerActionParam(mouseTilePos, CurrentAction, currentActionInt));
                 } else
                 {
-                    Global.Instance.SendCommand(new BattleActionParam(currentActionDir, currentTurn, mouseTilePos, CurrentAction));
+                    Global.Instance.SendCommand(new BattleActionParam(currentActionDir, mouseTilePos, CurrentAction));
                 }
                     
             }
@@ -303,6 +339,12 @@ public class Battle : MonoBehaviour
                 }
             }
         }
+
+        ClearHighlight();
+    }
+
+    private void ClearHighlight()
+    {
         //clear highlight range
         foreach (GameObject obj in highlightRange)
         {
@@ -355,6 +397,7 @@ public class Battle : MonoBehaviour
 
     private void displayGUI()
     {
+        Debug.Log("display gui");
         GameObject canvas = GameObject.Find("Canvas");
 
         foreach (Transform child in canvas.transform)
@@ -378,25 +421,48 @@ public class Battle : MonoBehaviour
 
 
 
-        //attaques
-        if (GetPlayerPokemonCount() == 0)
+        //boutons
+        if (isPokemonGoAction)
         {
+            Debug.Log("go action");
             index = 0;
             foreach (Action action in trainerActions)
             {
 
-                AddActionButton(canvas, action, index, true);
+                AddActionButton(canvas, action, index, true, false);
+
+                index++;
+            }
+
+            index = 0;
+            foreach (Pokemon pokemon in Team)
+            {
+
+                AddActionButton(canvas, TrainerActions.Get(TrainerAction.Pokemon_Go), index, false, true);
+
+                index++;
+            }
+        }
+        else if (GetPlayerPokemonCount() == 0)
+        {
+            Debug.Log("zero pokemon");
+            index = 0;
+            foreach (Action action in trainerActions)
+            {
+
+                AddActionButton(canvas, action, index, true, false);
 
                 index++;
             }
         }
         else if (turns[currentTurn].PlayerId == Global.Instance.PlayerId)
         {
+            Debug.Log("GUI attack");
             index = 0;
             foreach (Action action in turns[currentTurn].Actions)
             {
 
-                AddActionButton(canvas, action, index, false);
+                AddActionButton(canvas, action, index, false, false);
 
                 index++;
             }
@@ -405,7 +471,7 @@ public class Battle : MonoBehaviour
             foreach (Action action in trainerActions)
             {
 
-                AddActionButton(canvas, action, index, true);
+                AddActionButton(canvas, action, index, true, false);
 
                 index++;
             }
@@ -415,6 +481,7 @@ public class Battle : MonoBehaviour
     private int GetPlayerPokemonCount()
     {
         int result = 0;
+        Debug.Log("turn count " + turns.Count);
         foreach (BattleEntityClient entity in turns)
         {
             if (entity.PlayerId == Global.Instance.PlayerId)
@@ -422,10 +489,11 @@ public class Battle : MonoBehaviour
                 result++;
             }
         }
+        Debug.Log("pk count " + result);
         return result;
     }
 
-    private void AddActionButton(GameObject canvas, Action action, int index, bool isTrainer)
+    private void AddActionButton(GameObject canvas, Action action, int index, bool isTrainer, bool isPokemonGo)
     {
         var buttonObject = new GameObject("button");
         buttonObject.transform.parent = canvas.transform;
@@ -435,14 +503,22 @@ public class Battle : MonoBehaviour
         buttonComp.onClick.AddListener(delegate {
             currentActionInt = tmpIndex;
             isCurrentActionTrainer = isTrainer;
-            if (turns.Count > 0)
+            isPokemonGoSelection = isPokemonGo;
+            if (isTrainer && action.Id == (int)TrainerAction.Pokemon_Go)
             {
-                HighlightAction(turns[currentTurn]);
+                isPokemonGoAction = !isPokemonGoAction;
+                displayGUI();
             } else
             {
-                HighlightAction(new BattleEntity(0, 0, Global.Instance.PlayerId));
+                if (turns.Count > 0)
+                {
+                    HighlightAction(turns[currentTurn]);
+                }
+                else
+                {
+                    HighlightAction(new BattleEntity(0, 0, Global.Instance.PlayerId));
+                }
             }
-            
         });
 
         var imgComp = buttonObject.AddComponent<Image>();
@@ -481,6 +557,13 @@ public class Battle : MonoBehaviour
         battleEntity.MoveBattleEntity(pos, arena.Tilesize);
 
         return battleEntity;
+    }
+
+    private void RemovePokemon(int id)
+    {
+        Destroy(entities[id].Pokemon);
+        turns.Remove(entities[id]);
+        entities.Remove(id);
     }
 
     private void UpdateTrainerActions(List<TrainerAction> actions)

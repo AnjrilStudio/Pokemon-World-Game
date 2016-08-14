@@ -39,7 +39,7 @@ public class Battle : MonoBehaviour
             if (currentActionInt < 0) return null;
             if (isCurrentActionTrainer || isPokemonGoSelection)
             {
-                if (!isPokemonGoAction)
+                if (!isPokemonGoAction && !isPokemonGoSelection)
                 {
                     return trainerActions[currentActionInt];
                 } else

@@ -12,19 +12,19 @@ using UnityEngine;
 
 class Global
 {
-    public static Global Instance 
-	{ 
-		get 
-		{ 
-			if (_Instance == null) 
-				_Instance = new Global(); 
-			return _Instance; 
-		} 
-	}
-	
-	private static Global _Instance;
+    public static Global Instance
+    {
+        get
+        {
+            if (_Instance == null)
+                _Instance = new Global();
+            return _Instance;
+        }
+    }
 
-	private Global()
+    private static Global _Instance;
+
+    private Global()
     {
         MoveMessages = new ConcurrentQueue<MoveMessage>();
         MapMessages = new ConcurrentQueue<MapMessage>();
@@ -54,6 +54,7 @@ class Global
             Client = new TcpSocketClient();
             string rep = Client.Connect("127.0.0.1", 1337, MessageReceived, "jpiji");
             //string rep = Client.Connect("192.168.1.23", 1337, MessageReceived, "jpiji");
+            //string rep = Client.Connect("192.168.1.31", 1337, MessageReceived, "jpiji");
 
             Debug.Log("connect " + rep);
             PlayerId = Int32.Parse(rep.Split(':')[1]);
@@ -77,10 +78,10 @@ class Global
         if (message.StartsWith(prefix))
         {
             var entities = message.Remove(0, prefix.Length);
-            var entitiesCount = entities.Split(';').Length - 1;
+            var entitiesCount = entities.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries).Length;
             for (int i = 0; i < entitiesCount; i++)
             {
-                var entityStr = message.Split(';')[i];
+                var entityStr = entities.Split(';')[i];
 
                 MoveMessage move = new MoveMessage(entityStr);
 

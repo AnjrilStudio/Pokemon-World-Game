@@ -807,7 +807,7 @@ public class Map : MonoBehaviour
                 }
                 else
                 {
-                    entity = spawnPokemon(message.Id, message.Position, 0, 5);
+                    entity = spawnPokemon(message.Id, message.Position, message.PokedexId, 5);
                 }
 
                 entity.Object.SetActive(true);
@@ -839,17 +839,6 @@ public class Map : MonoBehaviour
                     entity.Object.transform.position = new Vector3(currentPos.x + 0.005f, currentPos.y + 0.015f, currentPos.z);
                 }
 
-                /*if (entity.Id == playerId)
-                {
-                    Debug.Log("moving");
-                    Debug.Log(entity.OldPos);
-                    Debug.Log(entity.CurrentPos);
-                    Debug.Log(Time.deltaTime);
-                    Debug.Log(entity.MoveTimer);
-                    Debug.Log(entity.Object.transform.position.x * (1/tilesize) + "/" + entity.Object.transform.position.y * (1 / tilesize));
-                    Debug.Log("-------");
-                }*/
-
             }
             else
             {
@@ -878,61 +867,6 @@ public class Map : MonoBehaviour
                 }
             }
         }
-
-
-
-
-        /*var spawnRate = 0.0002f;
-        var hideRate = 0.001f;
-        var moveRate = 0.01f;
-        List<PopulationEntity> spawnList = new List<PopulationEntity>();
-        List<MapEntity> hideList = new List<MapEntity>();
-        List<MapEntity> moveList = new List<MapEntity>();
-        for (int i = 0; i < mapsize; i++)
-        {
-            for (int j = 0; j < mapsize; j++)
-            {
-                if (populationMatrix[i, j].Count > 0 && entityMatrix[i, j] == null)
-                {
-                    foreach (PopulationEntity p in populationMatrix[i, j])
-                    {
-                        if (UnityEngine.Random.value < spawnRate)
-                        {
-                            spawnList.Add(p);
-                        }
-                    }
-                }
-
-                if (entityMatrix[i,j] != null && entityMatrix[i, j].IA == true)
-                {
-                    if (UnityEngine.Random.value < moveRate)
-                    {
-                        moveList.Add(entityMatrix[i, j]);
-                    } else if (UnityEngine.Random.value < hideRate)
-                    {
-                        hideList.Add(entityMatrix[i, j]);
-                    }
-                }
-            }
-        }
-
-        foreach (PopulationEntity p in spawnList)
-        {
-            spawnPokemon(p.Pos, p.Id, p.Level);
-        }
-
-        foreach (MapEntity p in hideList)
-        {
-            hidePokemon(p);
-        }
-
-        foreach (MapEntity p in moveList)
-        {
-            var dir = Utils.getDirPosition(Utils.getRandomDir());
-            moveEntity(p, p.CurrentPos.X + dir.X, p.CurrentPos.Y + dir.Y);
-        }*/
-
-
     }
 
     private MapEntity spawnPokemon(int id, Position pos, int pkId, int level)
@@ -940,17 +874,15 @@ public class Map : MonoBehaviour
         var prefab = "";
         switch (pkId)
         {
-            case 0:
-                prefab = "Rattata";
-                break;
+            default:
             case 1:
-                prefab = "Roucool";
+                prefab = "Rattata";
                 break;
             case 2:
-                prefab = "Ptitard";
+                prefab = "Roucool";
                 break;
-            default:
-                prefab = "Rattata";
+            case 3:
+                prefab = "Ptitard";
                 break;
         }
 

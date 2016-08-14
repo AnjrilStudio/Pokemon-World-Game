@@ -539,7 +539,7 @@ public class Battle : MonoBehaviour
         textComp.font = Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font;
         if (isPokemonGo)
         {
-            textComp.text = Global.Instance.Team[index].Id.ToString();
+            textComp.text = Global.Instance.Team[index].Name;
         } else
         {
             textComp.text = action.Name;

@@ -6,14 +6,26 @@ using System.Text;
 
 class Pokemon
 {
-    public int Id { get; private set; }
+    public int PokedexId { get; private set; }
     public int Level { get; private set; }
     public string Name { get; private set; }
 
-    public Pokemon(int id, int level)
+    public Pokemon(int pokedexId, int level)
     {
-        Id = id;
+        PokedexId = pokedexId;
         Level = level;
-        Name = "Roucool"; //TODO
+        switch (pokedexId)
+        {
+            default:
+            case 1:
+                Name = "Rattata";
+                break;
+            case 2:
+                Name = "Roucool";
+                break;
+            case 3:
+                Name = "Ptitard";
+                break;
+        }
     }
 }

@@ -2,6 +2,7 @@
 using Anjril.Common.Network;
 using Anjril.Common.Network.TcpImpl;
 using Anjril.Common.Network.TcpImpl.Properties;
+using Anjril.PokemonWorld.Common.Message;
 using Anjril.PokemonWorld.Common.Parameter;
 using Anjril.PokemonWorld.Common.State;
 using System;
@@ -26,13 +27,13 @@ class Global
 
     private Global()
     {
-        MoveMessages = new ConcurrentQueue<MoveMessage>();
+        MoveMessages = new ConcurrentQueue<PositionEntity>();
         MapMessages = new ConcurrentQueue<MapMessage>();
         BattleStartMessages = new ConcurrentQueue<BattleStartMessage>();
         BattleActionMessages = new ConcurrentQueue<BattleActionMessage>();
     }
 
-    public ConcurrentQueue<MoveMessage> MoveMessages { get; private set; }
+    public ConcurrentQueue<PositionEntity> MoveMessages { get; private set; }
 
     public ConcurrentQueue<MapMessage> MapMessages { get; private set; }
 
@@ -81,16 +82,12 @@ class Global
         var prefix = "entities:";
         if (message.StartsWith(prefix) && CurrentScene == "scene_map")
         {
-            var entities = message.Remove(0, prefix.Length);
-            var entitiesCount = entities.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries).Length;
-            for (int i = 0; i < entitiesCount; i++)
+            var notif = new PositionMessage();
+            notif.DeserializeArguments(message.Remove(0, prefix.Length));
+
+            foreach (var entity in notif.Entities)
             {
-                var entityStr = entities.Split(';')[i];
-
-                MoveMessage move = new MoveMessage(entityStr);
-
-                MoveMessages.Enqueue(move);
-
+                MoveMessages.Enqueue(entity);
             }
         }
 
@@ -113,14 +110,13 @@ class Global
         if (message.StartsWith(prefix))
         {
             Debug.Log("map received");
-            var map = message.Remove(0, prefix.Length);
+
+            var map = new MapMessage();
+            map.DeserializeArguments(message.Remove(0, prefix.Length));
 
             //Debug.Log(map);
-            var origin = map.Split('+')[0];
-            var segments = map.Split('+')[1];
-            var originPos = new Position(Int32.Parse(origin.Split(':')[0]), Int32.Parse(origin.Split(':')[1]));
 
-            MapMessages.Enqueue(new MapMessage(originPos, segments));
+            MapMessages.Enqueue(map);
         }
 
         prefix = "battlestart:";

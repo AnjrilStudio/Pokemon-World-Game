@@ -7,6 +7,7 @@ using UnityEngine.SceneManagement;
 using Anjril.PokemonWorld.Common.State;
 using Anjril.PokemonWorld.Common.Parameter;
 using Anjril.PokemonWorld.Common.Utils;
+using Anjril.PokemonWorld.Common.Message;
 
 public class Map : MonoBehaviour
 {
@@ -713,7 +714,7 @@ public class Map : MonoBehaviour
             entity.MoveTimer += Time.deltaTime;
             entity.IsAliveTimer += Time.deltaTime;
 
-            
+
             if (entity.IsAliveTimer > 1)
             {
                 entitiesToRemove.Add(entity);
@@ -728,10 +729,10 @@ public class Map : MonoBehaviour
         }
 
 
-        List<MoveMessage> transferList = new List<MoveMessage>();
+        List<PositionEntity> transferList = new List<PositionEntity>();
         while (Global.Instance.MoveMessages.Count > 0)
         {
-            MoveMessage message = Global.Instance.MoveMessages.Dequeue();
+            PositionEntity message = Global.Instance.MoveMessages.Dequeue();
             MapEntity entity = null;
 
             if (mapEntities.ContainsKey(message.Id))
@@ -740,9 +741,9 @@ public class Map : MonoBehaviour
                 entity.Object.SetActive(true);
                 entity.IsAliveTimer = 0;
 
-                if (message.Direction != Direction.None)
+                if (message.Orientation != Direction.None)
                 {
-                    entity.CurrentDir = message.Direction;
+                    entity.CurrentDir = message.Orientation;
                 }
 
                 if (!entity.CurrentPos.Equals(message.Position)) //todo gérer si la distance est trop grande (>1)
@@ -796,7 +797,7 @@ public class Map : MonoBehaviour
             else
             {
                 //Debug.Log("new entity");
-                if (message.IsPlayer)
+                if (message.Type == EntityType.Player)
                 {
                     entity = spawnPlayerCharacter(message.Id, message.Position);
                     if (entity.Id == Global.Instance.PlayerId)
@@ -814,10 +815,10 @@ public class Map : MonoBehaviour
             }
         }
 
-        
+
 
         //Debug.Log(transferList.Count);
-        foreach (MoveMessage message in transferList)
+        foreach (PositionEntity message in transferList)
         {
             Global.Instance.MoveMessages.Enqueue(message);
         }

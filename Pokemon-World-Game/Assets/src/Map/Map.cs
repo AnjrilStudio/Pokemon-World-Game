@@ -6,15 +6,17 @@ using System.Collections.Generic;
 using UnityEngine.SceneManagement;
 using Anjril.PokemonWorld.Common.State;
 using Anjril.PokemonWorld.Common.Parameter;
+using Anjril.PokemonWorld.Common.Utils;
 
-public class Map : MonoBehaviour {
+public class Map : MonoBehaviour
+{
 
     private MapEntity player;
     private float tilesize = 0.32f;
     private float tileZLayerFactor = 0.10f;
 
     private int chunksize = 20;
-    
+
     public int renderDistance = 15;
     public int zoom = 1;
 
@@ -25,8 +27,8 @@ public class Map : MonoBehaviour {
     private ChunkMatrix<MapEntity> entityMatrix;
     private ChunkMatrix<List<PopulationEntity>> populationMatrix;
 
-    private Dictionary<Int32,MapEntity> mapEntities;
-    
+    private Dictionary<Int32, MapEntity> mapEntities;
+
     private float moveInputDelay = 0.3f;
 
     private bool upWasUp = false;
@@ -34,12 +36,13 @@ public class Map : MonoBehaviour {
     private bool rightWasUp = false;
     private bool leftWasUp = false;
     private Direction lastInput = Direction.None;
-    
+
 
     private GameObject entitiesNode;
 
     // Use this for initialization
-    void Start () {
+    void Start()
+    {
         Global.Instance.InitClient();
 
         entitiesNode = GameObject.FindGameObjectWithTag("Entities");
@@ -55,7 +58,8 @@ public class Map : MonoBehaviour {
     }
 
     // Update is called once per frame
-    void Update() {
+    void Update()
+    {
 
         if (Global.Instance.BattleStartMessages.Count > 0)
         {
@@ -66,7 +70,7 @@ public class Map : MonoBehaviour {
         }
 
         updateEntities();
-            
+
         if (Global.Instance.MapMessages.Count > 0)
         {
             MapMessage message = Global.Instance.MapMessages.Dequeue();
@@ -144,14 +148,15 @@ public class Map : MonoBehaviour {
                     {
                         Global.Instance.SendCommand(new TurnParam(moveDir));
                         //Debug.Log("turn sent : " + moveDir.ToString());
-                    } else //move
+                    }
+                    else //move
                     {
                         Global.Instance.SendCommand(new MoveParam(moveDir));
                         //Debug.Log("move sent : " + moveDir.ToString());
 
                         //moveInput = false; //empêche l'envoie de plus d'une direction
                     }
-                        
+
                 }
 
 
@@ -162,8 +167,9 @@ public class Map : MonoBehaviour {
                 leftWasUp = !left;
                 rightWasUp = !right;
 
-                if (Input.GetKeyDown(KeyCode.Space)){
-                    var dirPos = Utils.GetDirPosition(player.CurrentDir);
+                if (Input.GetKeyDown(KeyCode.Space))
+                {
+                    var dirPos = PositionUtils.GetDirPosition(player.CurrentDir);
                     var otherPos = new Position(player.CurrentPos.X + dirPos.X, player.CurrentPos.Y - dirPos.Y);
                     Debug.Log(player.CurrentPos);
                     Debug.Log(otherPos);
@@ -173,7 +179,7 @@ public class Map : MonoBehaviour {
                         Global.Instance.Client.Send("btl/");
                         Global.Instance.SendCommand(new BattleStartParam());
                     }
-                    
+
                 }
             }
 
@@ -197,7 +203,8 @@ public class Map : MonoBehaviour {
         }
     }
 
-    private void OnApplicationQuit() {
+    private void OnApplicationQuit()
+    {
         Debug.Log("quit");
         Global.Instance.Client.Disconnect(Global.Instance.PlayerId.ToString());
     }
@@ -281,9 +288,9 @@ public class Map : MonoBehaviour {
                 mapOverlayMatrix[i, j] = new List<GameObject>();
                 populationMatrix[i, j] = new List<PopulationEntity>();
             }
-            
+
             i++;
-            if (i == origin.X + 60-1)
+            if (i == origin.X + 60 - 1)
             {
                 i = origin.X;
                 j++;
@@ -684,12 +691,12 @@ public class Map : MonoBehaviour {
         */
     }
 
-    private void instantiateOverlay(int i , int j, string prefab, float z)
+    private void instantiateOverlay(int i, int j, string prefab, float z)
     {
         var mapNode = GameObject.FindGameObjectWithTag("Map");
         var overlay = GameObject.Instantiate(Resources.Load(prefab)) as GameObject;
         overlay.transform.parent = mapNode.transform;
-        overlay.transform.position = new Vector3(tilesize * i, -tilesize * j, -0.5f-z - j * tileZLayerFactor);
+        overlay.transform.position = new Vector3(tilesize * i, -tilesize * j, -0.5f - z - j * tileZLayerFactor);
         overlay.SetActive(true);
         mapOverlayMatrix[i, j].Add(overlay);
     }
@@ -708,7 +715,7 @@ public class Map : MonoBehaviour {
         {
             MoveMessage message = Global.Instance.MoveMessages.Dequeue();
             MapEntity entity = null;
-            
+
             if (mapEntities.ContainsKey(message.Id))
             {
                 entity = mapEntities[message.Id];
@@ -729,7 +736,8 @@ public class Map : MonoBehaviour {
                         if (entity.MoveTimer - Time.deltaTime > entity.MoveTime)
                         {
                             entity.MoveTimer = 0;
-                        } else
+                        }
+                        else
                         {
                             //Debug.Log("continue");
                             entity.MoveTimer -= entity.MoveTime;
@@ -759,13 +767,15 @@ public class Map : MonoBehaviour {
 
                             }
                         }
-                    } else
+                    }
+                    else
                     {
                         transferList.Add(message);//on remet le message dans la file car on attend la fin de l'animation
                     }
                 }
 
-            } else
+            }
+            else
             {
                 Debug.Log("new entity");
                 if (message.IsPlayer)
@@ -775,11 +785,12 @@ public class Map : MonoBehaviour {
                     {
                         player = entity;
                     }
-                } else
+                }
+                else
                 {
                     entity = spawnPokemon(message.Id, message.Position, 0, 5);
                 }
-                
+
                 entity.Object.SetActive(true);
                 mapEntities.Add(message.Id, entity);
             }
@@ -801,7 +812,7 @@ public class Map : MonoBehaviour {
                 //moving
                 entity.Object.transform.position = Vector3.Lerp(new Vector3(entity.OldPos.X * tilesize, -entity.OldPos.Y * tilesize, -2 - entity.OldPos.Y * tileZLayerFactor), new Vector3(entity.CurrentPos.X * tilesize, -entity.CurrentPos.Y * tilesize, -2 - entity.OldPos.Y * tileZLayerFactor), entity.MoveTimer / entity.MoveTime);
 
-                if (anim == null && entity.MoveTimer%0.2f < 0.12f)
+                if (anim == null && entity.MoveTimer % 0.2f < 0.12f)
                 {
                     Vector3 currentPos = entity.Object.transform.position;
                     entity.Object.transform.position = new Vector3(currentPos.x + 0.005f, currentPos.y + 0.015f, currentPos.z);

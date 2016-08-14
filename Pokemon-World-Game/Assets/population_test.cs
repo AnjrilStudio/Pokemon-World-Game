@@ -2,9 +2,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using Anjril.PokemonWorld.Common.State;
+using Anjril.PokemonWorld.Common.Utils;
 
-public class population_test : MonoBehaviour {
-    
+public class population_test : MonoBehaviour
+{
+
     public float timeSpeed = 1;
 
     private float tilesize = 0.32f;
@@ -12,7 +14,7 @@ public class population_test : MonoBehaviour {
 
     private GroundEntity[,] mapMatrix;
     private List<PopulationEntity>[,] populationMatrix;
-    private float[,] repChanceMatrix = new float[3,3] { 
+    private float[,] repChanceMatrix = new float[3, 3] { 
         //red  , purple, yellow
         { 0.00f, 0.00f, 0.18f }, //sea
         { 0.12f, 0.00f, 0.00f }, //ground
@@ -56,7 +58,8 @@ public class population_test : MonoBehaviour {
     private float debugTime = 5f;
 
     // Use this for initialization
-    void Start () {
+    void Start()
+    {
         jsonMap = Resources.Load("map").ToString();
         loadMap();
 
@@ -67,11 +70,12 @@ public class population_test : MonoBehaviour {
             pop.Level = Mathf.FloorToInt(Random.value * 5);
         }
 
-        
+
     }
-	
-	// Update is called once per frame
-	void Update () {
+
+    // Update is called once per frame
+    void Update()
+    {
         reproductionTimer += Time.deltaTime * timeSpeed;
         moveTimer += Time.deltaTime * timeSpeed;
         ageTimer += Time.deltaTime * timeSpeed;
@@ -165,7 +169,7 @@ public class population_test : MonoBehaviour {
             }
         }
         Debug.Log("map loaded");
-        
+
     }
 
     private PopulationEntity addEntity(int x, int y, int id)
@@ -174,7 +178,8 @@ public class population_test : MonoBehaviour {
         var pos = new Position(x, y);
 
         var prefab = "";
-        switch (id){
+        switch (id)
+        {
             case 1:
                 prefab = "pop1";
                 break;
@@ -203,10 +208,10 @@ public class population_test : MonoBehaviour {
 
         return pop;
     }
-    
+
     private void moveEntity(PopulationEntity pop, Direction dir)
     {
-        Position p = Utils.GetDirPosition(dir);
+        Position p = PositionUtils.GetDirPosition(dir);
         Position newPos = new Position(pop.Pos.X + p.X, pop.Pos.Y + p.Y);
         newPos.NormalizePos(mapsize);
 
@@ -227,7 +232,7 @@ public class population_test : MonoBehaviour {
         {
             pop.NoRepTime -= value;
         }
-        
+
         /*int minLevel = pop.Level - fightLevelDiff;
         if (minLevel < 0) minLevel = 0;
         int zoneLevel = findZoneLevel(pop.Pos.X, pop.Pos.Y, minLevel);
@@ -240,7 +245,7 @@ public class population_test : MonoBehaviour {
             var scalePerLevel = 0.01f;
             pop.LevelObject.transform.localScale = new Vector3(0.5f + pop.Level * scalePerLevel, 0.5f + pop.Level * scalePerLevel, 1);
         }
-        
+
 
         if (pop.Age > ageLimit)
         {
@@ -273,7 +278,7 @@ public class population_test : MonoBehaviour {
                         if (Random.value < moveChance - p.Level * moveChanceMalusPerLevel)
                         {
                             tmpList.Add(p);
-                            
+
                         }
                     }
                 }
@@ -283,7 +288,7 @@ public class population_test : MonoBehaviour {
 
         foreach (PopulationEntity p in tmpList)
         {
-            moveEntity(p, Utils.RandomDirection());
+            moveEntity(p, DirectionUtils.RandomDirection());
         }
 
         return totalCount;
@@ -305,11 +310,11 @@ public class population_test : MonoBehaviour {
                     {
                         var repChance = repChanceMatrix[mapMatrix[i, j].Id, p.Id - 1];
 
-                        if (p.Sex == "F" && p.Age >= repAge && p.NoRepTime == 0) 
+                        if (p.Sex == "F" && p.Age >= repAge && p.NoRepTime == 0)
                         {
                             //todo renvoyer plus d'infos sur les males
                             float maleFactor = findMaleFactor(p.Id, i, j);
-                            
+
                             if (Random.value < repChance * maleFactor)
                             {
                                 tmpList.Add(p);//todo mémoriser un couple M/F

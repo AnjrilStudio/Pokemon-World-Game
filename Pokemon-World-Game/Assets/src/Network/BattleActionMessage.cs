@@ -1,5 +1,6 @@
 ﻿using Anjril.PokemonWorld.Common;
 using Anjril.PokemonWorld.Common.State;
+using Anjril.PokemonWorld.Common.Utils;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -30,7 +31,7 @@ class BattleActionMessage
         {
             Target = new Position(actionStr.Split(',')[0]);
             Action = Moves.Get((Move)(System.Int32.Parse(actionStr.Split(',')[1])));
-            Dir = Utils.DirectionFromString(actionStr.Split(',')[2]);
+            Dir = DirectionUtils.FromString(actionStr.Split(',')[2]);
         }
 
         var stateStr = battleStr.Split('=')[3];

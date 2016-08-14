@@ -355,65 +355,59 @@ public class Battle : MonoBehaviour
 
     private void displayGUI()
     {
-        if (turns.Count > 0)
+        GameObject canvas = GameObject.Find("Canvas");
+
+        foreach (Transform child in canvas.transform)
         {
-            GameObject canvas = GameObject.Find("Canvas");
+            GameObject.Destroy(child.gameObject);
+        }
 
-            foreach (Transform child in canvas.transform)
+        //pokemons
+        int index = 0;
+        foreach(BattleEntityClient turn in turns)
+        {
+            var textObject = new GameObject("text");
+            textObject.transform.parent = canvas.transform;
+            textObject.transform.localPosition = new Vector3(160, 80 + index * 30, 0);
+            var textComp = textObject.AddComponent<Text>();
+            textComp.font = Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font;
+            textComp.text = turn.Pokemon.name + " " + turn.HP + "/" + turn.MaxHP;
+
+            index++;
+        }
+
+
+
+        //attaques
+        if (GetPlayerPokemonCount() == 0)
+        {
+            index = 0;
+            foreach (Action action in trainerActions)
             {
-                GameObject.Destroy(child.gameObject);
+
+                AddActionButton(canvas, action, index, true);
+
+                index++;
             }
-
-            //pokemons
-            int index = 0;
-            foreach(BattleEntityClient turn in turns)
+        }
+        else if (turns[currentTurn].PlayerId == Global.Instance.PlayerId)
+        {
+            index = 0;
+            foreach (Action action in turns[currentTurn].Actions)
             {
-                var textObject = new GameObject("text");
-                textObject.transform.parent = canvas.transform;
-                textObject.transform.localPosition = new Vector3(160, 80 + index * 30, 0);
-                var textComp = textObject.AddComponent<Text>();
-                textComp.font = Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font;
-                textComp.text = turn.Pokemon.name + " " + turn.HP + "/" + turn.MaxHP;
+
+                AddActionButton(canvas, action, index, false);
 
                 index++;
             }
 
-
-
-            //attaques
-            if (GetPlayerPokemonCount() == 0)
+            index = 0;
+            foreach (Action action in trainerActions)
             {
-                index = 0;
-                foreach (Action action in trainerActions)
-                {
 
-                    AddActionButton(canvas, action, index, true);
+                AddActionButton(canvas, action, index, true);
 
-                    index++;
-                }
-            }
-            else if (turns[currentTurn].PlayerId == Global.Instance.PlayerId)
-            {
-                if (turns.Count > 1)
-                {
-                    index = 0;
-                    foreach (Action action in turns[currentTurn].Actions)
-                    {
-
-                        AddActionButton(canvas, action, index, false);
-
-                        index++;
-                    }
-                }
-
-                index = 0;
-                foreach (Action action in trainerActions)
-                {
-
-                    AddActionButton(canvas, action, index, true);
-
-                    index++;
-                }
+                index++;
             }
         }
     }

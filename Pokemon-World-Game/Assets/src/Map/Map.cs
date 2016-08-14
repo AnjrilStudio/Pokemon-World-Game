@@ -704,9 +704,24 @@ public class Map : MonoBehaviour
 
     private void updateEntities()
     {
+        List<MapEntity> entitiesToRemove = new List<MapEntity>();
         foreach (MapEntity entity in mapEntities.Values)
         {
             entity.MoveTimer += Time.deltaTime;
+            entity.IsAliveTimer += Time.deltaTime;
+
+            
+            if (entity.IsAliveTimer > 1)
+            {
+                entitiesToRemove.Add(entity);
+            }
+        }
+
+        foreach (MapEntity entityToRemove in entitiesToRemove)
+        {
+            mapEntities.Remove(entityToRemove.Id);
+            entityMatrix[entityToRemove.CurrentPos.X, entityToRemove.CurrentPos.Y] = null;
+            Destroy(entityToRemove.Object);
         }
 
 
@@ -720,7 +735,7 @@ public class Map : MonoBehaviour
             {
                 entity = mapEntities[message.Id];
                 entity.Object.SetActive(true);
-                //TODO entity isalivetimer à 0 et supprimer le timer atteint une certaine limite
+                entity.IsAliveTimer = 0;
 
                 if (message.Direction != Direction.None)
                 {
@@ -795,6 +810,8 @@ public class Map : MonoBehaviour
                 mapEntities.Add(message.Id, entity);
             }
         }
+
+        
 
         //Debug.Log(transferList.Count);
         foreach (MoveMessage message in transferList)

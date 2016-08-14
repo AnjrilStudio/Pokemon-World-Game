@@ -15,6 +15,7 @@ class MapEntity
     public Direction CurrentDir { get; set; }
     public float MoveTimer { get; set; }
     public float MoveTime { get; set; }
+    public float IsAliveTimer { get; set; }
 
     public List<Pokemon> Pokemons { get; private set; }
     public bool IA;
@@ -31,6 +32,7 @@ class MapEntity
         MoveTimer = 0;
         MoveTime = defautMoveTime;
         CurrentDir = Direction.Down;
+        IsAliveTimer = 0;
     }
 
     public MapEntity(int id)

@@ -16,8 +16,7 @@ public class Battle : MonoBehaviour
     private int mapsize = 10;
     public int currentTurn = 0;
     private int currentActionNumber = -1;
-
-    List<Pokemon> Team;
+    
     private List<Action> trainerActions;
     private bool isCurrentActionTrainer;
     private bool isPokemonGoAction;
@@ -50,7 +49,13 @@ public class Battle : MonoBehaviour
                     
             } else
             {
-                return turns[currentTurn].Actions[currentActionInt];
+                if (turns.Count > 0)
+                {
+                    return turns[currentTurn].Actions[currentActionInt];
+                } else
+                {
+                    return null;
+                }
             }
         }
     }
@@ -63,10 +68,7 @@ public class Battle : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        //todo recevoir les infos du serveur
-        Team = new List<Pokemon>();
-        Team.Add(new Pokemon(1, 5));
-        Team.Add(new Pokemon(2, 5));
+        Global.Instance.CurrentScene = SceneManager.GetActiveScene().name;
 
         mouseTilePos = new Position(0, 0);
 
@@ -435,9 +437,8 @@ public class Battle : MonoBehaviour
             }
 
             index = 0;
-            foreach (Pokemon pokemon in Team)
+            foreach (Pokemon pokemon in Global.Instance.Team)
             {
-
                 AddActionButton(canvas, TrainerActions.Get(TrainerAction.Pokemon_Go), index, false, true);
 
                 index++;
@@ -510,6 +511,7 @@ public class Battle : MonoBehaviour
                 displayGUI();
             } else
             {
+                isPokemonGoAction = false;
                 if (turns.Count > 0)
                 {
                     HighlightAction(turns[currentTurn]);
@@ -531,7 +533,13 @@ public class Battle : MonoBehaviour
         var textComp = textObject.AddComponent<Text>();
         textComp.alignment = TextAnchor.MiddleCenter;
         textComp.font = Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font;
-        textComp.text = action.Name;
+        if (isPokemonGo)
+        {
+            textComp.text = Global.Instance.Team[index].Id.ToString();
+        } else
+        {
+            textComp.text = action.Name;
+        }
         textComp.color = Color.black;
 
 

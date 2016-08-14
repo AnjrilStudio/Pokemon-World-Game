@@ -45,6 +45,9 @@ public class Map : MonoBehaviour
     {
         Global.Instance.InitClient();
 
+        Global.Instance.CurrentScene = SceneManager.GetActiveScene().name;
+        Global.Instance.MoveMessages.Clear();
+
         entitiesNode = GameObject.FindGameObjectWithTag("Entities");
 
         entityMatrix = new ChunkMatrix<MapEntity>(chunksize);
@@ -792,7 +795,7 @@ public class Map : MonoBehaviour
             }
             else
             {
-                Debug.Log("new entity");
+                //Debug.Log("new entity");
                 if (message.IsPlayer)
                 {
                     entity = spawnPlayerCharacter(message.Id, message.Position);

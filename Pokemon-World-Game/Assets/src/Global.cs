@@ -42,6 +42,9 @@ class Global
 
     public ISocketClient Client { get; private set; }
     public int PlayerId { get; private set; }
+    public List<Pokemon> Team { get; private set; }
+
+    public string CurrentScene { get; set; }
 
     private int messageCount = 0;
     private int port = 4245;
@@ -58,6 +61,7 @@ class Global
 
             Debug.Log("connect " + rep);
             PlayerId = Int32.Parse(rep.Split(':')[1]);
+            Team = new List<Pokemon>();
         }
     }
 
@@ -75,7 +79,7 @@ class Global
         }
 
         var prefix = "entities:";
-        if (message.StartsWith(prefix))
+        if (message.StartsWith(prefix) && CurrentScene == "scene_map")
         {
             var entities = message.Remove(0, prefix.Length);
             var entitiesCount = entities.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries).Length;
@@ -87,6 +91,21 @@ class Global
 
                 MoveMessages.Enqueue(move);
 
+            }
+        }
+
+        prefix = "team:";
+        if (message.StartsWith(prefix))
+        {
+            var teamStr = message.Remove(0, prefix.Length);
+            var pokemonCount = teamStr.Split(',').Count();
+            Team = new List<Pokemon>();
+            for (int i = 0; i < pokemonCount; i++)
+            {
+                var pokemonStr = teamStr.Split(',')[i];
+                var id = Int32.Parse(pokemonStr.Split('.')[0]);
+                var level = Int32.Parse(pokemonStr.Split('.')[1]);
+                Team.Add(new Pokemon(id, level));
             }
         }
 

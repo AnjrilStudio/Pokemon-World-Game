@@ -9,23 +9,22 @@ class BattleEntityClient : BattleEntity
 {
     public GameObject Pokemon { get; set; }
 
-    public BattleEntityClient(int id, int pokemonId, int playerId) : base (id, pokemonId, playerId)
+    public BattleEntityClient(int id, int pokedexId, int playerId) : base (id, pokedexId, playerId)
     {
-        switch (pokemonId)
+        switch (pokedexId)
         {
-            case 0:
+            default:
+            case 1:
                 Pokemon = GameObject.Instantiate(Resources.Load("Rattata")) as GameObject;
                 Pokemon.name = "Rattata";
                 break;
-            case 1:
+            case 2:
                 Pokemon = GameObject.Instantiate(Resources.Load("Roucool")) as GameObject;
                 Pokemon.name = "Roucool";
                 break;
-            case 2:
+            case 3:
                 Pokemon = GameObject.Instantiate(Resources.Load("Ptitard")) as GameObject;
                 Pokemon.name = "Ptitard";
-                break;
-            default:
                 break;
 
         }

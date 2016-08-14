@@ -399,7 +399,6 @@ public class Battle : MonoBehaviour
 
     private void displayGUI()
     {
-        Debug.Log("display gui");
         GameObject canvas = GameObject.Find("Canvas");
 
         foreach (Transform child in canvas.transform)
@@ -426,7 +425,6 @@ public class Battle : MonoBehaviour
         //boutons
         if (isPokemonGoAction)
         {
-            Debug.Log("go action");
             index = 0;
             foreach (Action action in trainerActions)
             {
@@ -446,7 +444,6 @@ public class Battle : MonoBehaviour
         }
         else if (GetPlayerPokemonCount() == 0)
         {
-            Debug.Log("zero pokemon");
             index = 0;
             foreach (Action action in trainerActions)
             {
@@ -458,7 +455,6 @@ public class Battle : MonoBehaviour
         }
         else if (turns[currentTurn].PlayerId == Global.Instance.PlayerId)
         {
-            Debug.Log("GUI attack");
             index = 0;
             foreach (Action action in turns[currentTurn].Actions)
             {
@@ -482,7 +478,6 @@ public class Battle : MonoBehaviour
     private int GetPlayerPokemonCount()
     {
         int result = 0;
-        Debug.Log("turn count " + turns.Count);
         foreach (BattleEntityClient entity in turns)
         {
             if (entity.PlayerId == Global.Instance.PlayerId)
@@ -490,7 +485,6 @@ public class Battle : MonoBehaviour
                 result++;
             }
         }
-        Debug.Log("pk count " + result);
         return result;
     }
 
@@ -502,23 +496,33 @@ public class Battle : MonoBehaviour
         var buttonComp = buttonObject.AddComponent<Button>();
         int tmpIndex = index;
         buttonComp.onClick.AddListener(delegate {
-            currentActionInt = tmpIndex;
-            isCurrentActionTrainer = isTrainer;
-            isPokemonGoSelection = isPokemonGo;
-            if (isTrainer && action.Id == (int)TrainerAction.Pokemon_Go)
+            if (action.Range != null)
             {
-                isPokemonGoAction = !isPokemonGoAction;
-                displayGUI();
-            } else
-            {
-                isPokemonGoAction = false;
-                if (turns.Count > 0)
+                currentActionInt = tmpIndex;
+                isCurrentActionTrainer = isTrainer;
+                isPokemonGoSelection = isPokemonGo;
+                if (isTrainer && action.Id == (int)TrainerAction.Pokemon_Go)
                 {
-                    HighlightAction(turns[currentTurn]);
+                    isPokemonGoAction = !isPokemonGoAction;
+                    displayGUI();
                 }
                 else
                 {
-                    HighlightAction(new BattleEntity(0, 0, Global.Instance.PlayerId));
+                    isPokemonGoAction = false;
+                    if (turns.Count > 0)
+                    {
+                        HighlightAction(turns[currentTurn]);
+                    }
+                    else
+                    {
+                        HighlightAction(new BattleEntity(0, 0, Global.Instance.PlayerId));
+                    }
+                }
+            } else
+            {
+                if (isTrainer)
+                {
+                    Global.Instance.SendCommand(new BattleTrainerActionParam(new Position(0, 0), action, 0));
                 }
             }
         });

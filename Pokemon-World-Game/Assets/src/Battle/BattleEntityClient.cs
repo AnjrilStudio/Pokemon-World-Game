@@ -39,10 +39,6 @@ class BattleEntityClient : BattleEntity
 
     public void UpdateBattleEntity(BattleStateEntity entity, float arenaTilesize)
     {
-        if (entity.ComingBack)
-        {
-            Pokemon.SetActive(false);
-        }
         MoveBattleEntity(entity.CurrentPos, arenaTilesize);
         HP = entity.HP;
         MaxHP = entity.MaxHP;
@@ -50,6 +46,11 @@ class BattleEntityClient : BattleEntity
         MaxAP = entity.MaxAP;
         MP = entity.MP;
         MaxMP = entity.MaxMP;
+        ComingBack = entity.ComingBack;
+        if (entity.ComingBack)
+        {
+            Pokemon.SetActive(false);
+        }
     }
 
 }

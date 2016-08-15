@@ -433,7 +433,9 @@ public class Battle : MonoBehaviour
                 var textComp = textObject.AddComponent<Text>();
                 textComp.fontSize = 25;
                 textComp.font = Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font;
-                textComp.text = turn.Pokemon.name + " " + turn.HP + "/" + turn.MaxHP;
+                var text = (index == currentTurn) ? " -> " : "    ";
+                text += turn.Pokemon.name + " " + turn.HP + "/" + turn.MaxHP;
+                textComp.text = text;
                 textComp.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 200);
                 index++;
             }

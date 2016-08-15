@@ -9,7 +9,7 @@ class MapEntity
 {
     private static float defautMoveTime = 0.6f;
 
-    public GameObject Object { get; private set; }
+    public GameObject Object { get; set; }
     public Position CurrentPos { get; set; }
     public Position OldPos { get; set; }
     public Direction CurrentDir { get; set; }

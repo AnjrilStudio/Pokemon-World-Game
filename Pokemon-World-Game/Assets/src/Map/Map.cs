@@ -766,6 +766,26 @@ public class Map : MonoBehaviour
                         var anim = entity.Object.GetComponent<Animator>();
                         //entity.CurrentDir = currentDir;
 
+                        //test
+                        if (anim == null && entity.Pokemons[0].PokedexId == 3)
+                        {
+                            if (message.State == EntityState.Swimming)
+                            {
+                                var oldObj = entity.Object;
+                                entity.Object = GameObject.Instantiate(Resources.Load("ptitardSwimming_0")) as GameObject;
+                                entity.Object.transform.position = new Vector3(oldObj.transform.position.x, oldObj.transform.position.y, oldObj.transform.position.z);
+                                entity.Object.transform.parent = entitiesNode.transform;
+                                Destroy(oldObj);
+                            } else
+                            {
+                                var oldObj = entity.Object;
+                                entity.Object = GameObject.Instantiate(Resources.Load("Ptitard")) as GameObject;
+                                entity.Object.transform.position = new Vector3(oldObj.transform.position.x, oldObj.transform.position.y, oldObj.transform.position.z);
+                                entity.Object.transform.parent = entitiesNode.transform;
+                                Destroy(oldObj);
+                            }
+                        }
+
                         if (entity.CurrentDir != Direction.None && anim != null)
                         {
                             //Debug.Log("walk");
@@ -837,6 +857,7 @@ public class Map : MonoBehaviour
                 {
                     Vector3 currentPos = entity.Object.transform.position;
                     entity.Object.transform.position = new Vector3(currentPos.x + 0.005f, currentPos.y + 0.015f, currentPos.z);
+                    
                 }
 
             }

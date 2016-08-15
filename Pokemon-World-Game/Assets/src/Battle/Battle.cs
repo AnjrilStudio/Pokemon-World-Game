@@ -5,7 +5,6 @@ using Anjril.PokemonWorld.Common;
 using Anjril.PokemonWorld.Common.State;
 using UnityEngine.SceneManagement;
 using Anjril.PokemonWorld.Common.Parameter;
-using Anjril.PokemonWorld.Common.Message;
 
 public class Battle : MonoBehaviour
 {
@@ -171,7 +170,6 @@ public class Battle : MonoBehaviour
                     isPokemonGoSelection = false;
                     displayGUI();
                     ClearHighlight();
-                    currentActionInt = -1;
                 }
                 
             }
@@ -412,17 +410,14 @@ public class Battle : MonoBehaviour
         int index = 0;
         foreach(BattleEntityClient turn in turns)
         {
-            if (!turn.ComingBack)
-            {
-                var textObject = new GameObject("text");
-                textObject.transform.parent = canvas.transform;
-                textObject.transform.localPosition = new Vector3(160, 80 + index * 30, 0);
-                var textComp = textObject.AddComponent<Text>();
-                textComp.font = Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font;
-                textComp.text = turn.Pokemon.name + " " + turn.HP + "/" + turn.MaxHP;
-                index++;
-            }
-            
+            var textObject = new GameObject("text");
+            textObject.transform.parent = canvas.transform;
+            textObject.transform.localPosition = new Vector3(160, 80 + index * 30, 0);
+            var textComp = textObject.AddComponent<Text>();
+            textComp.font = Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font;
+            textComp.text = turn.Pokemon.name + " " + turn.HP + "/" + turn.MaxHP;
+
+            index++;
         }
 
 

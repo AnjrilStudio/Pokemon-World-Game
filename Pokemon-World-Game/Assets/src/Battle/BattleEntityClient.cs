@@ -1,4 +1,5 @@
 ﻿using Anjril.PokemonWorld.Common;
+using Anjril.PokemonWorld.Common.Message;
 using Anjril.PokemonWorld.Common.State;
 using System.Collections.Generic;
 using System.Linq;
@@ -38,6 +39,10 @@ class BattleEntityClient : BattleEntity
 
     public void UpdateBattleEntity(BattleStateEntity entity, float arenaTilesize)
     {
+        if (entity.ComingBack)
+        {
+            Pokemon.SetActive(false);
+        }
         MoveBattleEntity(entity.CurrentPos, arenaTilesize);
         HP = entity.HP;
         MaxHP = entity.MaxHP;

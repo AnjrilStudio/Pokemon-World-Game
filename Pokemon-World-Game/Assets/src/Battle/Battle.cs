@@ -85,7 +85,10 @@ public class Battle : MonoBehaviour
         hover = GameObject.Instantiate(Resources.Load("hover")) as GameObject;
         hover.SetActive(false);
 
-        gameObject.transform.position = new Vector3(tilesize * (mapsize - 1) / 2, -tilesize * (mapsize - 1) / 2, gameObject.transform.position.z);
+        Camera camera = GetComponent<Camera>();
+        camera.orthographicSize = 2;
+        gameObject.transform.position = new Vector3(tilesize * (arena.ArenaSize - 1) / 2, -tilesize * (arena.ArenaSize - 1) / 2, gameObject.transform.position.z);
+        gameObject.transform.position = new Vector3(gameObject.transform.position.x + 1, gameObject.transform.position.y - 0.35f, gameObject.transform.position.z);
 
         highlightRange = new List<GameObject>();
         highlightAOE = new List<GameObject>();
@@ -189,7 +192,7 @@ public class Battle : MonoBehaviour
 
             //pointer control
             Camera camera = GetComponent<Camera>();
-            Vector3 p = camera.WorldToScreenPoint(gameObject.transform.position);
+            Vector3 p = camera.WorldToScreenPoint(new Vector3(0, 0, -10));
 
             mousex = Input.mousePosition.x - p.x;
             mousey = Input.mousePosition.y - p.y;
@@ -198,8 +201,8 @@ public class Battle : MonoBehaviour
             var x0 = p2.x / tilesize / Screen.width;
             var y0 = -p2.y / tilesize / Screen.height;
 
-            var mousetileposx = Mathf.FloorToInt(x0) + arena.ArenaSize / 2;
-            var mousetileposy = Mathf.FloorToInt(y0) + arena.ArenaSize / 2;
+            var mousetileposx = Mathf.RoundToInt(x0);
+            var mousetileposy = Mathf.RoundToInt(y0);
             mouseTilePos = new Position(mousetileposx, mousetileposy);
 
             //hover
@@ -416,10 +419,12 @@ public class Battle : MonoBehaviour
             {
                 var textObject = new GameObject("text");
                 textObject.transform.parent = canvas.transform;
-                textObject.transform.localPosition = new Vector3(160, 80 + index * 30, 0);
+                textObject.transform.localPosition = new Vector3(250, 300 - index * 50, 0);
                 var textComp = textObject.AddComponent<Text>();
+                textComp.fontSize = 25;
                 textComp.font = Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font;
                 textComp.text = turn.Pokemon.name + " " + turn.HP + "/" + turn.MaxHP;
+                textComp.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 200);
                 index++;
             }
             
@@ -497,7 +502,7 @@ public class Battle : MonoBehaviour
     {
         var buttonObject = new GameObject("button");
         buttonObject.transform.parent = canvas.transform;
-        buttonObject.transform.localPosition = new Vector3(-100 + index * 50, isTrainer?-150:-200, 0);
+        buttonObject.transform.localPosition = new Vector3(-450 + index * 120, isTrainer?-300:-350, 0);
         var buttonComp = buttonObject.AddComponent<Button>();
         int tmpIndex = index;
         buttonComp.onClick.AddListener(delegate {
@@ -552,9 +557,9 @@ public class Battle : MonoBehaviour
         textComp.color = Color.black;
 
 
-        buttonObject.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 50);
+        buttonObject.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 120);
         buttonObject.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 50);
-        textObject.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 50);
+        textObject.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 120);
         textObject.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 50);
     }
 

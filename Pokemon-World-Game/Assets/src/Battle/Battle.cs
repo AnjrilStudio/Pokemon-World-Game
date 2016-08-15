@@ -533,7 +533,7 @@ public class Battle : MonoBehaviour
         });
 
         var imgComp = buttonObject.AddComponent<Image>();
-        imgComp.sprite = UnityEditor.AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UISprite.psd");
+        imgComp.sprite = Resources.Load<Sprite>("button");
 
         var textObject = new GameObject("text");
         textObject.transform.parent = buttonObject.transform;

@@ -17,7 +17,7 @@ public class Battle : MonoBehaviour
     private int mapsize = 10;
     public int currentTurn = 0;
     private int currentActionNumber = -1;
-    
+
     private List<Action> trainerActions;
     private bool isCurrentActionTrainer;
     private bool isPokemonGoAction;
@@ -34,7 +34,8 @@ public class Battle : MonoBehaviour
     private Position mouseTilePos;
 
     private int currentActionInt;
-    private Action CurrentAction {
+    private Action CurrentAction
+    {
         get
         {
             if (currentActionInt < 0) return null;
@@ -43,17 +44,20 @@ public class Battle : MonoBehaviour
                 if (!isPokemonGoAction && !isPokemonGoSelection)
                 {
                     return trainerActions[currentActionInt];
-                } else
+                }
+                else
                 {
                     return TrainerActions.Get(TrainerAction.Pokemon_Go);
                 }
-                    
-            } else
+
+            }
+            else
             {
                 if (turns.Count > 0)
                 {
                     return turns[currentTurn].Actions[currentActionInt];
-                } else
+                }
+                else
                 {
                     return null;
                 }
@@ -61,7 +65,7 @@ public class Battle : MonoBehaviour
         }
     }
     private Direction currentActionDir;
-    
+
     private float animTimer = 0;
 
 
@@ -85,7 +89,10 @@ public class Battle : MonoBehaviour
         hover = GameObject.Instantiate(Resources.Load("hover")) as GameObject;
         hover.SetActive(false);
 
-        gameObject.transform.position = new Vector3(tilesize * (mapsize - 1) / 2, -tilesize * (mapsize - 1) / 2, gameObject.transform.position.z);
+        Camera camera = GetComponent<Camera>();
+        camera.orthographicSize = 2;
+        gameObject.transform.position = new Vector3(tilesize * (arena.ArenaSize - 1) / 2, -tilesize * (arena.ArenaSize - 1) / 2, gameObject.transform.position.z);
+        gameObject.transform.position = new Vector3(gameObject.transform.position.x + 1, gameObject.transform.position.y - 0.35f, gameObject.transform.position.z);
 
         highlightRange = new List<GameObject>();
         highlightAOE = new List<GameObject>();
@@ -103,7 +110,8 @@ public class Battle : MonoBehaviour
     void Update()
     {
         animTimer += Time.deltaTime;
-        if (animTimer >= 0) {
+        if (animTimer >= 0)
+        {
             //todo recevoir les mises à jour du serveur
             //turn play
             /*
@@ -157,11 +165,11 @@ public class Battle : MonoBehaviour
                         }
                     }
 
-                    foreach(int id in entitiesToRemove)
+                    foreach (int id in entitiesToRemove)
                     {
                         RemovePokemon(id);
                     }
-                    
+
                     currentActionNumber++;
                     currentTurn = battlestate.CurrentTurn;
 
@@ -173,7 +181,7 @@ public class Battle : MonoBehaviour
                     ClearHighlight();
                     currentActionInt = -1;
                 }
-                
+
             }
 
             //par defaut
@@ -189,7 +197,7 @@ public class Battle : MonoBehaviour
 
             //pointer control
             Camera camera = GetComponent<Camera>();
-            Vector3 p = camera.WorldToScreenPoint(gameObject.transform.position);
+            Vector3 p = camera.WorldToScreenPoint(new Vector3(0, 0, -10));
 
             mousex = Input.mousePosition.x - p.x;
             mousey = Input.mousePosition.y - p.y;
@@ -198,8 +206,8 @@ public class Battle : MonoBehaviour
             var x0 = p2.x / tilesize / Screen.width;
             var y0 = -p2.y / tilesize / Screen.height;
 
-            var mousetileposx = Mathf.FloorToInt(x0) + arena.ArenaSize / 2;
-            var mousetileposy = Mathf.FloorToInt(y0) + arena.ArenaSize / 2;
+            var mousetileposx = Mathf.RoundToInt(x0);
+            var mousetileposy = Mathf.RoundToInt(y0);
             mouseTilePos = new Position(mousetileposx, mousetileposy);
 
             //hover
@@ -268,7 +276,7 @@ public class Battle : MonoBehaviour
                 hover.SetActive(false);
             }
 
-                
+
             //action control
             //var highlight = CurrentAction != null;
             var highlight = false;
@@ -291,18 +299,19 @@ public class Battle : MonoBehaviour
             {
                 HighlightAction(turn);
             }
-            
+
             //click control
             if ((inRange || inRange2) && Input.GetMouseButtonDown(0) && hover.activeSelf && CurrentAction != null)
             {
                 if (isCurrentActionTrainer || isPokemonGoSelection)
                 {
                     Global.Instance.SendCommand(new BattleTrainerActionParam(mouseTilePos, CurrentAction, currentActionInt));
-                } else
+                }
+                else
                 {
                     Global.Instance.SendCommand(new BattleActionParam(currentActionDir, mouseTilePos, CurrentAction));
                 }
-                    
+
             }
         }
     }
@@ -311,13 +320,13 @@ public class Battle : MonoBehaviour
     {
         var currentPos = new Vector3(tilesize * entity.CurrentPos.X, -tilesize * entity.CurrentPos.Y, 0);
         var targetPos = new Vector3(tilesize * target.X, -tilesize * target.Y, 0);
-        
+
         bool inRange = action.Range.InRange(arena, entity, target);
         if (action.Range2 != null && action.Range2.InRange(arena, entity, target))
         {
             inRange = true;
         }
-        
+
         if (inRange)
         {
             foreach (FxDescriptor fx in MoveFx.Get((Move)action.Id))
@@ -410,19 +419,21 @@ public class Battle : MonoBehaviour
 
         //pokemons
         int index = 0;
-        foreach(BattleEntityClient turn in turns)
+        foreach (BattleEntityClient turn in turns)
         {
             if (!turn.ComingBack)
             {
                 var textObject = new GameObject("text");
                 textObject.transform.parent = canvas.transform;
-                textObject.transform.localPosition = new Vector3(160, 80 + index * 30, 0);
+                textObject.transform.localPosition = new Vector3(250, 300 - index * 50, 0);
                 var textComp = textObject.AddComponent<Text>();
+                textComp.fontSize = 25;
                 textComp.font = Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font;
                 textComp.text = turn.Pokemon.name + " " + turn.HP + "/" + turn.MaxHP;
+                textComp.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 200);
                 index++;
             }
-            
+
         }
 
 
@@ -497,10 +508,11 @@ public class Battle : MonoBehaviour
     {
         var buttonObject = new GameObject("button");
         buttonObject.transform.parent = canvas.transform;
-        buttonObject.transform.localPosition = new Vector3(-100 + index * 50, isTrainer?-150:-200, 0);
+        buttonObject.transform.localPosition = new Vector3(-450 + index * 120, isTrainer ? -300 : -350, 0);
         var buttonComp = buttonObject.AddComponent<Button>();
         int tmpIndex = index;
-        buttonComp.onClick.AddListener(delegate {
+        buttonComp.onClick.AddListener(delegate
+        {
             if (action.Range != null)
             {
                 currentActionInt = tmpIndex;
@@ -523,7 +535,8 @@ public class Battle : MonoBehaviour
                         HighlightAction(new BattleEntity(0, 0, Global.Instance.PlayerId));
                     }
                 }
-            } else
+            }
+            else
             {
                 if (isTrainer)
                 {
@@ -545,16 +558,17 @@ public class Battle : MonoBehaviour
         if (isPokemonGo)
         {
             textComp.text = Global.Instance.Team[index].Name;
-        } else
+        }
+        else
         {
             textComp.text = action.Name;
         }
         textComp.color = Color.black;
 
 
-        buttonObject.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 50);
+        buttonObject.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 120);
         buttonObject.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 50);
-        textObject.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 50);
+        textObject.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 120);
         textObject.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 50);
     }
 

@@ -123,6 +123,10 @@ public class Battle : MonoBehaviour
             if (Global.Instance.BattleActionMessages.Count > 0)
             {
                 BattleActionMessage battleaction = Global.Instance.BattleActionMessages.Peek();
+                if (currentActionNumber == -1) //spectateur
+                {
+                    currentActionNumber = battleaction.ActionId - 1;
+                }
                 if (battleaction.ActionId == currentActionNumber + 1)
                 {
                     battleaction = Global.Instance.BattleActionMessages.Dequeue();

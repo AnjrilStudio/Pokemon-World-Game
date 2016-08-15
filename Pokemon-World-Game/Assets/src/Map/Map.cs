@@ -786,6 +786,26 @@ public class Map : MonoBehaviour
                             }
                         }
 
+                        if (anim == null && entity.Pokemons[0].PokedexId == 2)
+                        {
+                            if (message.State == EntityState.Flying)
+                            {
+                                var oldObj = entity.Object;
+                                entity.Object = GameObject.Instantiate(Resources.Load("roucoolFlying_0")) as GameObject;
+                                entity.Object.transform.position = new Vector3(oldObj.transform.position.x, oldObj.transform.position.y, oldObj.transform.position.z);
+                                entity.Object.transform.parent = entitiesNode.transform;
+                                Destroy(oldObj);
+                            }
+                            else
+                            {
+                                var oldObj = entity.Object;
+                                entity.Object = GameObject.Instantiate(Resources.Load("Roucool")) as GameObject;
+                                entity.Object.transform.position = new Vector3(oldObj.transform.position.x, oldObj.transform.position.y, oldObj.transform.position.z);
+                                entity.Object.transform.parent = entitiesNode.transform;
+                                Destroy(oldObj);
+                            }
+                        }
+
                         if (entity.CurrentDir != Direction.None && anim != null)
                         {
                             //Debug.Log("walk");

@@ -1,0 +1,11 @@
+NUGET
+  remote: http://api.nuget.org/v3/index.json
+  specs:
+    Anjril.Common.Network (1.0.0-rc2)
+    Anjril.Common.Network.TcpImpl (1.0.0-rc3)
+      Anjril.Common.Network (>= 1.0.0-rc2)
+      Common.Logging (>= 3.3.1)
+    Anjril.PokemonWorld.Common (1.0.0.1)
+    Common.Logging (3.3.1)
+      Common.Logging.Core (>= 3.3.1)
+    Common.Logging.Core (3.3.1)

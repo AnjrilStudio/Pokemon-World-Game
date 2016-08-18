@@ -174,6 +174,12 @@ public class Battle : MonoBehaviour
                         RemovePokemon(id);
                     }
 
+                    turns.Clear();
+                    foreach (int id in actualEntities)
+                    {
+                        turns.Add(entities[id]);
+                    }
+
                     currentActionNumber++;
                     currentTurn = battlestate.CurrentTurn;
 
@@ -437,9 +443,8 @@ public class Battle : MonoBehaviour
                 text += turn.Pokemon.name + " " + turn.HP + "/" + turn.MaxHP;
                 textComp.text = text;
                 textComp.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 200);
-                index++;
             }
-
+            index++;
         }
 
 
@@ -464,7 +469,7 @@ public class Battle : MonoBehaviour
                 index++;
             }
         }
-        else if (GetPlayerPokemonCount() == 0)
+        else if (GetPlayerPokemonCount() == 0 || turns[currentTurn].ComingBack)
         {
             index = 0;
             foreach (Action action in trainerActions)
@@ -475,7 +480,7 @@ public class Battle : MonoBehaviour
                 index++;
             }
         }
-        else if (turns[currentTurn].PlayerId == Global.Instance.PlayerId)
+        else if (turns[currentTurn].PlayerId == Global.Instance.PlayerId && !turns[currentTurn].ComingBack)
         {
             index = 0;
             foreach (Action action in turns[currentTurn].Actions)
@@ -502,7 +507,7 @@ public class Battle : MonoBehaviour
         int result = 0;
         foreach (BattleEntityClient entity in turns)
         {
-            if (entity.PlayerId == Global.Instance.PlayerId)
+            if (entity.PlayerId == Global.Instance.PlayerId && !entity.ComingBack)
             {
                 result++;
             }
@@ -599,7 +604,6 @@ public class Battle : MonoBehaviour
     private void RemovePokemon(int id)
     {
         Destroy(entities[id].Pokemon);
-        turns.Remove(entities[id]);
         entities.Remove(id);
     }
 

@@ -17,13 +17,13 @@ class Pokemon
         switch (pokedexId)
         {
             default:
-            case 1:
+            case 19:
                 Name = "Rattata";
                 break;
-            case 2:
+            case 16:
                 Name = "Roucool";
                 break;
-            case 3:
+            case 60:
                 Name = "Ptitard";
                 break;
         }

@@ -15,15 +15,15 @@ class BattleEntityClient : BattleEntity
         switch (pokedexId)
         {
             default:
-            case 1:
+            case 19:
                 Pokemon = GameObject.Instantiate(Resources.Load("Rattata")) as GameObject;
                 Pokemon.name = "Rattata";
                 break;
-            case 2:
+            case 16:
                 Pokemon = GameObject.Instantiate(Resources.Load("Roucool")) as GameObject;
                 Pokemon.name = "Roucool";
                 break;
-            case 3:
+            case 60:
                 Pokemon = GameObject.Instantiate(Resources.Load("Ptitard")) as GameObject;
                 Pokemon.name = "Ptitard";
                 break;

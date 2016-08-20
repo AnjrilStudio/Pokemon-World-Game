@@ -12,6 +12,7 @@ public class Battle : MonoBehaviour
 
     private List<BattleEntityClient> turns;
     private Dictionary<int, BattleEntityClient> entities;
+    private List<int> pokemonToGoList;
     private float tilesize = 0.32f;
     private Arena arena;
     private int mapsize = 10;
@@ -79,7 +80,10 @@ public class Battle : MonoBehaviour
 
         arena = new Arena(mapsize, 0.32f);
         turns = new List<BattleEntityClient>();
+        pokemonToGoList = new List<int>();
         entities = new Dictionary<int, BattleEntityClient>();
+
+
         trainerActions = new List<Action>();
         trainerActions.Add(TrainerActions.Get(TrainerAction.End_Battle));
         trainerActions.Add(TrainerActions.Get(TrainerAction.Pokemon_Go));
@@ -109,22 +113,28 @@ public class Battle : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (Global.Instance.BattleStartMessages.Count > 0)
+        {
+            BattleStartMessage message = Global.Instance.BattleStartMessages.Dequeue();
+            //todo message pour dire qu'un joueur est devenu spectateur
+        }
+
         animTimer += Time.deltaTime;
         if (animTimer >= 0)
         {
-            //todo recevoir les mises à jour du serveur
-            //turn play
-            /*
-            if (turn.HP == 0)
+            if (pokemonToGoList.Count > 0)
             {
-                Application.LoadLevel("scene_map");
-            }*/
-
-            if (Global.Instance.BattleActionMessages.Count > 0)
+                turns[pokemonToGoList[0]].Pokemon.SetActive(true); //TODO animation
+                pokemonToGoList.RemoveAt(0);
+                animTimer = -1.0f;
+            }
+            else if (Global.Instance.BattleActionMessages.Count > 0)
             {
+                bool spectator = false;
                 BattleActionMessage battleaction = Global.Instance.BattleActionMessages.Peek();
                 if (currentActionNumber == -1) //spectateur
                 {
+                    spectator = true;
                     currentActionNumber = battleaction.ActionId - 1;
                 }
                 if (battleaction.ActionId == currentActionNumber + 1)
@@ -139,7 +149,6 @@ public class Battle : MonoBehaviour
                     {
                         PlayTurn(turns[currentTurn], battleaction.Target, battleaction.Action, battleaction.Dir);
                     }
-
 
                     List<int> actualEntities = new List<int>();
                     BattleStateMessage battlestate = battleaction.State;
@@ -157,6 +166,12 @@ public class Battle : MonoBehaviour
                             pkmn.HP = entity.HP;
                             pkmn.MaxHP = entity.MaxHP;
                             turns.Add(pkmn);
+
+                            if (!spectator)
+                            {
+                                pkmn.Pokemon.SetActive(false);
+                                pokemonToGoList.Add(turns.IndexOf(pkmn));
+                            }
                         }
                     }
 
@@ -321,7 +336,9 @@ public class Battle : MonoBehaviour
                 {
                     Global.Instance.SendCommand(new BattleActionParam(currentActionDir, mouseTilePos, CurrentAction));
                 }
-
+                
+                ClearHighlight();
+                currentActionInt = -1;
             }
         }
     }

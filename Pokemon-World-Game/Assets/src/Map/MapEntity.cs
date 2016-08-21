@@ -17,7 +17,8 @@ class MapEntity
     public float MoveTime { get; set; }
     public float IsAliveTimer { get; set; }
 
-    public List<Pokemon> Pokemons { get; private set; }
+    public int PokedexId { get; set; }
+    public int Level { get; set; }
     public bool IA;
     public int Id { get; private set; }
 
@@ -26,7 +27,7 @@ class MapEntity
         Object = obj;
         CurrentPos = new Position(X, Y);
         OldPos = new Position(X, Y);
-        Pokemons = new List<Pokemon>();
+        PokedexId = -1;
         IA = true;
         Id = id;
         MoveTimer = 0;

@@ -56,7 +56,7 @@ public class Battle : MonoBehaviour
             {
                 if (turns.Count > 0)
                 {
-                    return turns[currentTurn].Actions[currentActionInt];
+                    return turns[currentTurn].Moves[currentActionInt];
                 }
                 else
                 {
@@ -500,7 +500,7 @@ public class Battle : MonoBehaviour
         else if (turns[currentTurn].PlayerId == Global.Instance.PlayerId && !turns[currentTurn].ComingBack)
         {
             index = 0;
-            foreach (Action action in turns[currentTurn].Actions)
+            foreach (Action action in turns[currentTurn].Moves)
             {
 
                 AddActionButton(canvas, action, index, false, false);

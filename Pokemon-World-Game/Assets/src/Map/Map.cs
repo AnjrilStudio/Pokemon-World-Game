@@ -30,7 +30,7 @@ public class Map : MonoBehaviour
 
     private Dictionary<Int32, MapEntity> mapEntities;
 
-    private float moveInputDelay = 0.3f;
+    private float moveInputDelay = 0.2f;
 
     private bool upWasUp = false;
     private bool downWasUp = false;
@@ -767,7 +767,7 @@ public class Map : MonoBehaviour
                         //entity.CurrentDir = currentDir;
 
                         //test
-                        if (anim == null && entity.Pokemons[0].PokedexId == 3)
+                        if (anim == null && entity.PokedexId == 60)
                         {
                             if (message.State == EntityState.Swimming)
                             {
@@ -787,7 +787,7 @@ public class Map : MonoBehaviour
                             }
                         }
 
-                        if (anim == null && entity.Pokemons[0].PokedexId == 2)
+                        if (anim == null && entity.PokedexId == 16)
                         {
                             if (message.State == EntityState.Flying)
                             {
@@ -885,7 +885,7 @@ public class Map : MonoBehaviour
             else
             {
                 //if (entity.Id == playerId)  Debug.Log("stop");
-                //entity.OldPos = entity.CurrentPos;
+                entity.OldPos = entity.CurrentPos;
                 //animation
                 if (anim != null)
                 {
@@ -933,7 +933,8 @@ public class Map : MonoBehaviour
         pkmnObj.transform.parent = entitiesNode.transform;
         pkmnObj.SetActive(false);
         var pkmn = new MapEntity(id, pkmnObj, pos.X, pos.Y);
-        pkmn.Pokemons.Add(new Pokemon(pkId, level));
+        pkmn.PokedexId = pkId;
+        pkmn.Level = level;
         entityMatrix[pos.X, pos.Y] = pkmn;
 
         return pkmn;
@@ -945,7 +946,6 @@ public class Map : MonoBehaviour
         playerObj.transform.position = new Vector3(position.X * tilesize, -position.Y * tilesize, -2 - position.Y * tileZLayerFactor);
         playerObj.transform.parent = entitiesNode.transform;
         var playercharacter = new MapEntity(id, playerObj, position.X, position.Y);
-        playercharacter.Pokemons.Add(new Pokemon(1, 5));
         playercharacter.IA = false;
         entityMatrix[position.X, position.Y] = playercharacter;
         mapEntities.Add(id, playercharacter);

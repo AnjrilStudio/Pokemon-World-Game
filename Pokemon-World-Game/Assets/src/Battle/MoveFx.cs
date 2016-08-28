@@ -6,7 +6,7 @@ using System.Text;
 
 class MoveFx
 {
-    private static List<FxDescriptor>[] movefx = new List<FxDescriptor>[10];
+    private static List<FxDescriptor>[] movefx = new List<FxDescriptor>[20];
 
     public static List<FxDescriptor> Get(Move move)
     {
@@ -31,7 +31,7 @@ class MoveFx
             case Move.Move:
                 break;
 
-            case Move.Tackle:
+            case Move.Ember:
                 FxDescriptor fxTackle1 = new FxDescriptor("flame");
                 fxTackle1.Pattern = new ProjectileParticlePattern();
                 fxTackle1.Pattern.AddModifier(new RandomRotationModifier());

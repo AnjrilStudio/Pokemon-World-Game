@@ -31,15 +31,16 @@ class BattleEntityClient : BattleEntity
         }
     }
     
-    public void MoveBattleEntity(Position target, float arenaTilesize)
+    public void MoveBattleEntity(Position target, Arena arena)
     {
-        Pokemon.transform.position = new Vector3(target.X * arenaTilesize, -target.Y * arenaTilesize, -2);
+        arena.MoveBattleEntity(this, target);
+        Pokemon.transform.position = new Vector3(target.X * arena.Tilesize, -target.Y * arena.Tilesize, -2);
         CurrentPos = new Position(target.X, target.Y);
     }
 
-    public void UpdateBattleEntity(BattleStateEntity entity, float arenaTilesize)
+    public void UpdateBattleEntity(BattleStateEntity entity, Arena arena)
     {
-        MoveBattleEntity(entity.CurrentPos, arenaTilesize);
+        MoveBattleEntity(entity.CurrentPos, arena);
         HP = entity.HP;
         MaxHP = entity.MaxHP;
         AP = entity.AP;

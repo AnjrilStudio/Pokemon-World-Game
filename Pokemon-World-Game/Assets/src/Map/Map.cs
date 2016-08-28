@@ -188,8 +188,11 @@ public class Map : MonoBehaviour
             }
 
             //deplacement camera
-            Vector3 playerPosition = player.Object.transform.position;
-            gameObject.transform.position = new Vector3(playerPosition.x, playerPosition.y, playerPosition.z - 10);
+            if (player.Object != null)
+            {
+                Vector3 playerPosition = player.Object.transform.position;
+                gameObject.transform.position = new Vector3(playerPosition.x, playerPosition.y, playerPosition.z - 10);
+            }
         }
     }
 
@@ -948,7 +951,6 @@ public class Map : MonoBehaviour
         var playercharacter = new MapEntity(id, playerObj, position.X, position.Y);
         playercharacter.IA = false;
         entityMatrix[position.X, position.Y] = playercharacter;
-        mapEntities.Add(id, playercharacter);
 
         return playercharacter;
     }

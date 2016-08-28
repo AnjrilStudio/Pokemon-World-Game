@@ -151,6 +151,7 @@ public class Battle : MonoBehaviour
                     }
 
                     List<int> actualEntities = new List<int>();
+                    List<int> entitiesToAdd = new List<int>();
                     BattleStateMessage battlestate = battleaction.State;
                     foreach (BattleStateEntity entity in battlestate.Entities)
                     {
@@ -158,7 +159,7 @@ public class Battle : MonoBehaviour
                         if (entities.ContainsKey(entity.Id))
                         {
                             var battleEntity = entities[entity.Id];
-                            battleEntity.UpdateBattleEntity(entity, arena.Tilesize);
+                            battleEntity.UpdateBattleEntity(entity, arena);
                         }
                         else
                         {
@@ -170,7 +171,7 @@ public class Battle : MonoBehaviour
                             if (!spectator)
                             {
                                 pkmn.Pokemon.SetActive(false);
-                                pokemonToGoList.Add(turns.IndexOf(pkmn));
+                                entitiesToAdd.Add(entity.Id);
                             }
                         }
                     }
@@ -192,6 +193,10 @@ public class Battle : MonoBehaviour
                     turns.Clear();
                     foreach (int id in actualEntities)
                     {
+                        if (entitiesToAdd.Contains(id))
+                        {
+                            pokemonToGoList.Add(turns.Count);
+                        }
                         turns.Add(entities[id]);
                     }
 
@@ -251,48 +256,40 @@ public class Battle : MonoBehaviour
 
                 if (CurrentAction != null)
                 {
-
-                    if (CurrentAction.TargetType == TargetType.None)
+                    //aoe
+                    Position target = mouseTilePos;
+                    if (CurrentAction.TargetType == TargetType.Position)
                     {
-                        inRange = true;
-                    }
-                    else
-                    {
-                        //aoe
-                        Position target = mouseTilePos;
-                        if (CurrentAction.TargetType == TargetType.Position)
+                        currentActionDir = Direction.None;
+                        if (CurrentAction.Range.InRange(arena, turn, target))
                         {
-                            currentActionDir = Direction.None;
-                            if (CurrentAction.Range.InRange(arena, turn, target))
+                            inRange = true;
+                        }
+                        if (CurrentAction.Range2 != null && CurrentAction.Range2.InRange(arena, turn, target))
+                        {
+                            inRange2 = true;
+                        }
+                    }
+
+                    if (CurrentAction.TargetType == TargetType.Directional)
+                    {
+                        foreach (Direction dir in System.Enum.GetValues(typeof(Direction)))
+                        {
+                            if (CurrentAction.Range.InRange(arena, turn, target, dir))
                             {
+                                currentActionDir = dir;
                                 inRange = true;
                             }
-                            if (CurrentAction.Range2 != null && CurrentAction.Range2.InRange(arena, turn, target))
+                            if (CurrentAction.Range2 != null && CurrentAction.Range2.InRange(arena, turn, target, dir))
                             {
+                                currentActionDir = dir;
                                 inRange2 = true;
                             }
                         }
-
-                        if (CurrentAction.TargetType == TargetType.Directional)
-                        {
-                            foreach (Direction dir in System.Enum.GetValues(typeof(Direction)))
-                            {
-                                if (CurrentAction.Range.InRange(arena, turn, target, dir))
-                                {
-                                    currentActionDir = dir;
-                                    inRange = true;
-                                }
-                                if (CurrentAction.Range2 != null && CurrentAction.Range2.InRange(arena, turn, target, dir))
-                                {
-                                    currentActionDir = dir;
-                                    inRange2 = true;
-                                }
-                            }
-                        }
-                        if (inRange || inRange2)
-                        {
-                            HighlightAOE(turn, CurrentAction, target, currentActionDir);
-                        }
+                    }
+                    if (inRange || inRange2)
+                    {
+                        HighlightAOE(turn, CurrentAction, target, currentActionDir);
                     }
                 }
             }
@@ -406,22 +403,19 @@ public class Battle : MonoBehaviour
             Destroy(obj);
         }
         highlightRange.Clear();
-
-        if (action.TargetType != TargetType.None)
+        
+        foreach (Position target in action.InRangeTiles(self, arena))
         {
-            foreach (Position target in action.InRangeTiles(self, arena))
-            {
-                var highlight = GameObject.Instantiate(Resources.Load("highlight")) as GameObject;
-                highlight.transform.position = new Vector3(tilesize * target.X, -tilesize * target.Y, 0);
-                highlightRange.Add(highlight);
-            }
+            var highlight = GameObject.Instantiate(Resources.Load("highlight")) as GameObject;
+            highlight.transform.position = new Vector3(tilesize * target.X, -tilesize * target.Y, 0);
+            highlightRange.Add(highlight);
+        }
 
-            foreach (Position target in action.InRange2Tiles(self, arena))
-            {
-                var highlight = GameObject.Instantiate(Resources.Load("highlight2")) as GameObject;
-                highlight.transform.position = new Vector3(tilesize * target.X, -tilesize * target.Y, 0);
-                highlightRange.Add(highlight);
-            }
+        foreach (Position target in action.InRange2Tiles(self, arena))
+        {
+            var highlight = GameObject.Instantiate(Resources.Load("highlight2")) as GameObject;
+            highlight.transform.position = new Vector3(tilesize * target.X, -tilesize * target.Y, 0);
+            highlightRange.Add(highlight);
         }
     }
 
@@ -452,14 +446,17 @@ public class Battle : MonoBehaviour
             {
                 var textObject = new GameObject("text");
                 textObject.transform.parent = canvas.transform;
-                textObject.transform.localPosition = new Vector3(250, 300 - index * 50, 0);
+                textObject.transform.localPosition = new Vector3(350, 300 - index * 50, 0);
                 var textComp = textObject.AddComponent<Text>();
-                textComp.fontSize = 25;
+                textComp.fontSize = 20;
                 textComp.font = Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font;
                 var text = (index == currentTurn) ? " -> " : "    ";
-                text += turn.Pokemon.name + " " + turn.HP + "/" + turn.MaxHP;
+                text += turn.Pokemon.name + " ";
+                text += "HP: " + turn.HP + "/" + turn.MaxHP + " ";
+                text += "AP: " + turn.AP + "/" + turn.MaxAP + " ";
+                text += "MP: " + turn.MP + "/" + turn.MaxMP + " ";
                 textComp.text = text;
-                textComp.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 200);
+                textComp.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 400);
             }
             index++;
         }
@@ -613,13 +610,14 @@ public class Battle : MonoBehaviour
 
         entities.Add(id, battleEntity);
 
-        battleEntity.MoveBattleEntity(pos, arena.Tilesize);
+        battleEntity.MoveBattleEntity(pos, arena);
 
         return battleEntity;
     }
 
     private void RemovePokemon(int id)
     {
+        arena.RemoveBattleEntity(entities[id]);
         Destroy(entities[id].Pokemon);
         entities.Remove(id);
     }

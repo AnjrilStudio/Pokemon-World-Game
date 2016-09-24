@@ -2,3 +2,4 @@ source https://api.nuget.org/v3/index.json
 
 nuget Anjril.Common.Network.TcpImpl ~> 1.0.0
 nuget Anjril.PokemonWorld.Common ~> 1.0.0
+nuget Newtonsoft.Json ~> 9.0.0

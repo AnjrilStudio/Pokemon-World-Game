@@ -10,12 +10,14 @@ class MapEntity
     private static float defautMoveTime = 0.6f;
 
     public GameObject Object { get; set; }
+    public GameObject OverlayObject { get; set; }
     public Position CurrentPos { get; set; }
     public Position OldPos { get; set; }
     public Direction CurrentDir { get; set; }
     public float MoveTimer { get; set; }
     public float MoveTime { get; set; }
     public float IsAliveTimer { get; set; }
+    public EntityState State { get; set; }
 
     public int PokedexId { get; set; }
     public int Level { get; set; }
@@ -34,6 +36,7 @@ class MapEntity
         MoveTime = defautMoveTime;
         CurrentDir = Direction.Down;
         IsAliveTimer = 0;
+        State = EntityState.Walking;
     }
 
     public MapEntity(int id)

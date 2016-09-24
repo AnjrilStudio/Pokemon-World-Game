@@ -1,0 +1,3 @@
+[14-Sep-2009 14:48:42] PHP Warning:  include_once(funcs.ini.php) [<a href='function.include-once'>function.include-once</a>]: failed to open stream: No such file or directory in /home/nza/public_html/media/pokemon/gen4/overworld/back/copycat.php on line 2
+[14-Sep-2009 14:48:42] PHP Warning:  include_once() [<a href='function.include'>function.include</a>]: Failed opening 'funcs.ini.php' for inclusion (include_path='.:/usr/lib/php:/usr/local/lib/php') in /home/nza/public_html/media/pokemon/gen4/overworld/back/copycat.php on line 2
+[14-Sep-2009 14:48:42] PHP Fatal error:  Call to undefined function  con() in /home/nza/public_html/media/pokemon/gen4/overworld/back/copycat.php on line 3

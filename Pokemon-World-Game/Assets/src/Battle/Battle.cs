@@ -331,6 +331,7 @@ public class Battle : MonoBehaviour
                 }
                 else
                 {
+                    Debug.Log("sent " + currentActionDir);
                     Global.Instance.SendCommand(new BattleActionParam(currentActionDir, mouseTilePos, CurrentAction));
                 }
                 
@@ -340,41 +341,52 @@ public class Battle : MonoBehaviour
         }
     }
 
-    private void PlayTurn(BattleEntity entity, Position target, Action action, Direction dir)
+    private void PlayTurn(BattleEntityClient entity, Position target, Action action, Direction dir)
     {
         var currentPos = new Vector3(tilesize * entity.CurrentPos.X, -tilesize * entity.CurrentPos.Y, 0);
         var targetPos = new Vector3(tilesize * target.X, -tilesize * target.Y, 0);
-
-        bool inRange = action.Range.InRange(arena, entity, target);
-        if (action.Range2 != null && action.Range2.InRange(arena, entity, target))
+        
+        foreach (FxDescriptor fx in MoveFx.Get((Move)action.Id))
         {
-            inRange = true;
+            if (fx.Pattern != null && fx.PrefabName != null)
+            {
+                GameObject fxObj = new GameObject();
+                var partgen = fxObj.AddComponent<ParticleGenerator>();
+                partgen.Pattern = fx.Pattern;
+                partgen.PrefabName = fx.PrefabName;
+                if (fx.Type == FxType.FromTarget)
+                {
+                    fxObj.transform.position = targetPos;
+                    fxObj.transform.rotation = Quaternion.AngleAxis(ClientUtils.GetDirRotation(dir), Vector3.back);
+                }
+                else if (fx.Type == FxType.ToTarget)
+                {
+                    partgen.Target = targetPos - currentPos;
+                    fxObj.transform.position = currentPos;
+                }
+
+                animTimer = Mathf.Min(-(fx.Pattern.Duration + fx.Pattern.Delay), animTimer);
+            }
         }
 
-        if (inRange)
+        var spriteRenderer = entity.Pokemon.GetComponent<SpriteRenderer>();
+        Debug.Log("got " + dir);
+        switch (dir)
         {
-            foreach (FxDescriptor fx in MoveFx.Get((Move)action.Id))
-            {
-                if (fx.Pattern != null && fx.PrefabName != null)
-                {
-                    GameObject fxObj = new GameObject();
-                    var partgen = fxObj.AddComponent<ParticleGenerator>();
-                    partgen.Pattern = fx.Pattern;
-                    partgen.PrefabName = fx.PrefabName;
-                    if (fx.Type == FxType.FromTarget)
-                    {
-                        fxObj.transform.position = targetPos;
-                        fxObj.transform.rotation = Quaternion.AngleAxis(ClientUtils.GetDirRotation(dir), Vector3.back);
-                    }
-                    else if (fx.Type == FxType.ToTarget)
-                    {
-                        partgen.Target = targetPos - currentPos;
-                        fxObj.transform.position = currentPos;
-                    }
-
-                    animTimer = Mathf.Min(-(fx.Pattern.Duration + fx.Pattern.Delay), animTimer);
-                }
-            }
+            case Direction.Down:
+                spriteRenderer.sprite = Resources.Load<Sprite>("pokemonSprites/front/" + entity.PokedexId);
+                break;
+            case Direction.Up:
+                spriteRenderer.sprite = Resources.Load<Sprite>("pokemonSprites/back/" + entity.PokedexId);
+                break;
+            case Direction.Right:
+                spriteRenderer.sprite = Resources.Load<Sprite>("pokemonSprites/right/" + entity.PokedexId);
+                break;
+            case Direction.Left:
+                spriteRenderer.sprite = Resources.Load<Sprite>("pokemonSprites/left/" + entity.PokedexId);
+                break;
+            default:
+                break;
         }
 
         ClearHighlight();

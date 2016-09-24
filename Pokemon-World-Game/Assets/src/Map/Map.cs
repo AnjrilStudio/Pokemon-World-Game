@@ -769,45 +769,39 @@ public class Map : MonoBehaviour
                         var anim = entity.Object.GetComponent<Animator>();
                         //entity.CurrentDir = currentDir;
 
-                        //test
-                        if (anim == null && entity.PokedexId == 60)
+                        if (entity.PokedexId != -1)
                         {
-                            if (message.State == EntityState.Swimming)
-                            {
-                                var oldObj = entity.Object;
-                                entity.Object = GameObject.Instantiate(Resources.Load("ptitardSwimming_0")) as GameObject;
-                                entity.Object.transform.position = new Vector3(oldObj.transform.position.x, oldObj.transform.position.y, oldObj.transform.position.z);
-                                entity.Object.transform.parent = entitiesNode.transform;
-                                Destroy(oldObj);
-                            }
-                            else
-                            {
-                                var oldObj = entity.Object;
-                                entity.Object = GameObject.Instantiate(Resources.Load("Ptitard")) as GameObject;
-                                entity.Object.transform.position = new Vector3(oldObj.transform.position.x, oldObj.transform.position.y, oldObj.transform.position.z);
-                                entity.Object.transform.parent = entitiesNode.transform;
-                                Destroy(oldObj);
-                            }
-                        }
+                            var spriteRenderer = entity.Object.GetComponent<SpriteRenderer>();
 
-                        if (anim == null && entity.PokedexId == 16)
-                        {
-                            if (message.State == EntityState.Flying)
+                            switch (entity.CurrentDir)
                             {
-                                var oldObj = entity.Object;
-                                entity.Object = GameObject.Instantiate(Resources.Load("roucoolFlying_0")) as GameObject;
-                                entity.Object.transform.position = new Vector3(oldObj.transform.position.x, oldObj.transform.position.y, oldObj.transform.position.z);
-                                entity.Object.transform.parent = entitiesNode.transform;
-                                Destroy(oldObj);
+                                case Direction.Down:
+                                    spriteRenderer.sprite = Resources.Load<Sprite>("pokemonSprites/front/"+ entity.PokedexId);
+                                    break;
+                                case Direction.Up:
+                                    spriteRenderer.sprite = Resources.Load<Sprite>("pokemonSprites/back/" + entity.PokedexId);
+                                    break;
+                                case Direction.Right:
+                                    spriteRenderer.sprite = Resources.Load<Sprite>("pokemonSprites/right/" + entity.PokedexId);
+                                    break;
+                                case Direction.Left:
+                                    spriteRenderer.sprite = Resources.Load<Sprite>("pokemonSprites/left/" + entity.PokedexId);
+                                    break;
                             }
-                            else
+                            
+                            entity.State = message.State;
+
+                            var overlaySpriteRenderer = entity.OverlayObject.GetComponent<SpriteRenderer>();
+                            if (entity.State == EntityState.Swimming)
                             {
-                                var oldObj = entity.Object;
-                                entity.Object = GameObject.Instantiate(Resources.Load("Roucool")) as GameObject;
-                                entity.Object.transform.position = new Vector3(oldObj.transform.position.x, oldObj.transform.position.y, oldObj.transform.position.z);
-                                entity.Object.transform.parent = entitiesNode.transform;
-                                Destroy(oldObj);
+                                overlaySpriteRenderer.sprite = Resources.Load<Sprite>("swimming");
+                                entity.OverlayObject.SetActive(true);
+                            } else
+                            {
+                                overlaySpriteRenderer.sprite = null;
+                                entity.OverlayObject.SetActive(false);
                             }
+                                
                         }
 
                         if (entity.CurrentDir != Direction.None && anim != null)
@@ -827,7 +821,6 @@ public class Map : MonoBehaviour
                                 case Direction.Left:
                                     anim.CrossFade("player_left", 0f);
                                     break;
-
                             }
                         }
                     }
@@ -877,11 +870,17 @@ public class Map : MonoBehaviour
                 //moving
                 entity.Object.transform.position = Vector3.Lerp(new Vector3(entity.OldPos.X * tilesize, -entity.OldPos.Y * tilesize, -2 - entity.OldPos.Y * tileZLayerFactor), new Vector3(entity.CurrentPos.X * tilesize, -entity.CurrentPos.Y * tilesize, -2 - entity.OldPos.Y * tileZLayerFactor), entity.MoveTimer / entity.MoveTime);
 
-                if (anim == null && entity.MoveTimer % 0.2f < 0.12f)
+                if (entity.PokedexId != -1 && entity.MoveTimer % 0.2f < 0.12f && entity.State == EntityState.Walking)
                 {
                     Vector3 currentPos = entity.Object.transform.position;
                     entity.Object.transform.position = new Vector3(currentPos.x + 0.005f, currentPos.y + 0.015f, currentPos.z);
 
+                }
+
+                //decalage vertical des pokemons
+                if (entity.PokedexId != -1)
+                {
+                    entity.Object.transform.Translate(new Vector3(0, tilesize / 4, 0)); // 4 ?
                 }
 
             }
@@ -916,29 +915,28 @@ public class Map : MonoBehaviour
 
     private MapEntity spawnPokemon(int id, Position pos, int pkId, int level)
     {
-        var prefab = "";
-        switch (pkId)
-        {
-            default:
-            case 19:
-                prefab = "Rattata";
-                break;
-            case 16:
-                prefab = "Roucool";
-                break;
-            case 60:
-                prefab = "Ptitard";
-                break;
-        }
+        var pkmnObj = GameObject.Instantiate(Resources.Load("PokemonPrefab")) as GameObject;
+        pkmnObj.transform.localScale = new Vector3(1.25f, 1.25f, 1);
 
-        var pkmnObj = GameObject.Instantiate(Resources.Load(prefab)) as GameObject;
-        pkmnObj.transform.position = new Vector3(pos.X * tilesize, -pos.Y * tilesize, -2);
+        var spriteRenderer = pkmnObj.GetComponent<SpriteRenderer>();
+        spriteRenderer.sprite = Resources.Load<Sprite>("pokemonSprites/front/" + pkId);
+
+        pkmnObj.transform.position = new Vector3(pos.X * tilesize , -pos.Y * tilesize, -2);
         pkmnObj.transform.parent = entitiesNode.transform;
         pkmnObj.SetActive(false);
+
+
+        var overlayObj = GameObject.Instantiate(Resources.Load("PokemonPrefab")) as GameObject;
+        overlayObj.transform.position = new Vector3(pos.X * tilesize, -pos.Y * tilesize, -2.1f);
+        overlayObj.transform.parent = pkmnObj.transform;
+        overlayObj.transform.localScale = new Vector3(1, 1, 1);
+        overlayObj.SetActive(false);
+
         var pkmn = new MapEntity(id, pkmnObj, pos.X, pos.Y);
         pkmn.PokedexId = pkId;
         pkmn.Level = level;
         entityMatrix[pos.X, pos.Y] = pkmn;
+        pkmn.OverlayObject = overlayObj;
 
         return pkmn;
     }

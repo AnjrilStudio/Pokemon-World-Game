@@ -11,11 +11,11 @@ static class ClientUtils
         switch (dir)
         {
             case Direction.Up:
-                return 90f;
+                return -90f;
             case Direction.Right:
                 return 0;
             case Direction.Down:
-                return -90f;
+                return 90f;
             case Direction.Left:
                 return 180f;
             default:

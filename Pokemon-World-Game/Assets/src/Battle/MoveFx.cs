@@ -6,7 +6,7 @@ using System.Text;
 
 class MoveFx
 {
-    private static List<FxDescriptor>[] movefx = new List<FxDescriptor>[20];
+    private static List<FxDescriptor>[] movefx = new List<FxDescriptor>[50];
 
     public static List<FxDescriptor> Get(Move move)
     {

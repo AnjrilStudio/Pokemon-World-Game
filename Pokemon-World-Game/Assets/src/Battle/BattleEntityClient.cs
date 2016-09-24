@@ -1,4 +1,5 @@
 ﻿using Anjril.PokemonWorld.Common;
+using Anjril.PokemonWorld.Common.Index;
 using Anjril.PokemonWorld.Common.Message;
 using Anjril.PokemonWorld.Common.State;
 using System.Collections.Generic;
@@ -12,23 +13,14 @@ class BattleEntityClient : BattleEntity
 
     public BattleEntityClient(int id, int pokedexId, int playerId) : base (id, pokedexId, playerId)
     {
-        switch (pokedexId)
-        {
-            default:
-            case 19:
-                Pokemon = GameObject.Instantiate(Resources.Load("Rattata")) as GameObject;
-                Pokemon.name = "Rattata";
-                break;
-            case 16:
-                Pokemon = GameObject.Instantiate(Resources.Load("Roucool")) as GameObject;
-                Pokemon.name = "Roucool";
-                break;
-            case 60:
-                Pokemon = GameObject.Instantiate(Resources.Load("Ptitard")) as GameObject;
-                Pokemon.name = "Ptitard";
-                break;
+        var pkmnObj = GameObject.Instantiate(Resources.Load("PokemonPrefab")) as GameObject;
+        pkmnObj.transform.localScale = new Vector3(1.25f, 1.25f, 1);
 
-        }
+        var spriteRenderer = pkmnObj.GetComponent<SpriteRenderer>();
+        spriteRenderer.sprite = Resources.Load<Sprite>("pokemonSprites/front/" + pokedexId);
+
+        Pokemon = pkmnObj;
+        Pokemon.name = Pokedex.GetPokemonSheetByNationalId(pokedexId).Name;
     }
     
     public void MoveBattleEntity(Position target, Arena arena)

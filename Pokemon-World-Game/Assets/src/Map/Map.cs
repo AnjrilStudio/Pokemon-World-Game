@@ -173,8 +173,8 @@ public class Map : MonoBehaviour
 
                 if (Input.GetKeyDown(KeyCode.Space))
                 {
-                    var dirPos = PositionUtils.GetDirPosition(player.CurrentDir);
-                    var otherPos = new Position(player.CurrentPos.X + dirPos.X, player.CurrentPos.Y - dirPos.Y);
+                    var dirPos = PositionUtils.GetDirPosition(player.CurrentDir, true);
+                    var otherPos = new Position(player.CurrentPos.X + dirPos.X, player.CurrentPos.Y + dirPos.Y);
                     Debug.Log(player.CurrentPos);
                     Debug.Log(otherPos);
                     if (entityMatrix[otherPos.X, otherPos.Y] != null)

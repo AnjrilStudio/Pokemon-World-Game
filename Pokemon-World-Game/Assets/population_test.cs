@@ -211,7 +211,7 @@ public class population_test : MonoBehaviour
 
     private void moveEntity(PopulationEntity pop, Direction dir)
     {
-        Position p = PositionUtils.GetDirPosition(dir);
+        Position p = PositionUtils.GetDirPosition(dir, true);
         Position newPos = new Position(pop.Pos.X + p.X, pop.Pos.Y + p.Y);
         newPos.NormalizePos(mapsize);
 

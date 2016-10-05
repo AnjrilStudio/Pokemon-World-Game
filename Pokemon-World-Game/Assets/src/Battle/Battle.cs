@@ -215,7 +215,7 @@ public class Battle : MonoBehaviour
             }
 
             //par defaut
-            BattleEntity turn = new BattleEntity(0, 0, Global.Instance.PlayerId);
+            BattleEntity turn = null;
 
             if (turns.Count > 0)
             {
@@ -331,7 +331,6 @@ public class Battle : MonoBehaviour
                 }
                 else
                 {
-                    Debug.Log("sent " + currentActionDir);
                     Global.Instance.SendCommand(new BattleActionParam(currentActionDir, mouseTilePos, CurrentAction));
                 }
                 
@@ -370,7 +369,6 @@ public class Battle : MonoBehaviour
         }
 
         var spriteRenderer = entity.Pokemon.GetComponent<SpriteRenderer>();
-        Debug.Log("got " + dir);
         switch (dir)
         {
             case Direction.Down:

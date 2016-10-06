@@ -48,7 +48,7 @@ class Global
     public string CurrentScene { get; set; }
 
     private int messageCount = 0;
-    private int port = 4245;
+    private int port = 4244;
     private string serverIp = "127.0.0.1";
     private string userName = "jpiji";
 

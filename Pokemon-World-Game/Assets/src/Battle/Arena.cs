@@ -6,12 +6,12 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-class Arena : BattleArena
+class BattleArenaClient : Arena
 {
     public float Tilesize { get; private set; }
     public GameObject[,] Tiles;
 
-    public Arena (int size, float tilesize) : base(size)
+    public BattleArenaClient (int size, float tilesize) : base(size)
     {
         Tilesize = tilesize;
 

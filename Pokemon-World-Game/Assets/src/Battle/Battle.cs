@@ -14,7 +14,7 @@ public class Battle : MonoBehaviour
     private Dictionary<int, BattleEntityClient> entities;
     private List<int> pokemonToGoList;
     private float tilesize = 0.32f;
-    private Arena arena;
+    private BattleArenaClient arena;
     private int mapsize = 10;
     public int currentTurn = 0;
     private int currentActionNumber = -1;
@@ -78,7 +78,7 @@ public class Battle : MonoBehaviour
 
         mouseTilePos = new Position(0, 0);
 
-        arena = new Arena(mapsize, 0.32f);
+        arena = new BattleArenaClient(mapsize, 0.32f);
         turns = new List<BattleEntityClient>();
         pokemonToGoList = new List<int>();
         entities = new Dictionary<int, BattleEntityClient>();

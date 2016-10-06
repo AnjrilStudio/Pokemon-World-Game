@@ -23,14 +23,14 @@ class BattleEntityClient : BattleEntity
         Pokemon.name = Pokedex.GetPokemonSheetByNationalId(pokedexId).Name;
     }
     
-    public void MoveBattleEntity(Position target, Arena arena)
+    public void MoveBattleEntity(Position target, BattleArenaClient arena)
     {
         arena.MoveBattleEntity(this, target);
         Pokemon.transform.position = new Vector3(target.X * arena.Tilesize, -target.Y * arena.Tilesize, -2);
         CurrentPos = new Position(target.X, target.Y);
     }
 
-    public void UpdateBattleEntity(BattleStateEntity entity, Arena arena)
+    public void UpdateBattleEntity(BattleStateEntity entity, BattleArenaClient arena)
     {
         MoveBattleEntity(entity.CurrentPos, arena);
         HP = entity.HP;

@@ -143,6 +143,7 @@ public class Battle : MonoBehaviour
                     if (battleaction.State == null)
                     {
                         SceneManager.LoadScene("scene_map");
+                        return;
                     }
 
                     if (battleaction.Action != null)

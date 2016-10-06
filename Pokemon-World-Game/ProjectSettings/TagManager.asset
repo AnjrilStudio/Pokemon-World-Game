@@ -7,6 +7,8 @@ TagManager:
   - Arena
   - Entities
   - Map
+  - UserNameField
+  - ServerIpField
   layers:
   - Default
   - TransparentFX

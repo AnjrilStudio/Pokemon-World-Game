@@ -49,6 +49,8 @@ class Global
 
     private int messageCount = 0;
     private int port = 4245;
+    private string serverIp = "127.0.0.1";
+    private string userName = "jpiji";
 
     public void InitClient()
     {
@@ -56,7 +58,7 @@ class Global
         {
             Settings.Default.ClientPort = port;
             Client = new TcpSocketClient();
-            string rep = Client.Connect("127.0.0.1", 1337, MessageReceived, "jpiji");
+            string rep = Client.Connect(serverIp, 1337, MessageReceived, userName);
             //string rep = Client.Connect("192.168.1.23", 1337, MessageReceived, "jpiji");
             //string rep = Client.Connect("192.168.1.31", 1337, MessageReceived, "jpiji");
 
@@ -64,6 +66,12 @@ class Global
             PlayerId = Int32.Parse(rep.Split(':')[1]);
             Team = new List<Pokemon>();
         }
+    }
+
+    public void Login(string serverip, string username)
+    {
+        serverIp = serverip;
+        userName = username;
     }
 
     public void SendCommand(BaseParam param)

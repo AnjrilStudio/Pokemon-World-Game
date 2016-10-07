@@ -164,7 +164,7 @@ public class Battle : MonoBehaviour
                         }
                         else
                         {
-                            var pkmn = initPokemon(entity.Id, entity.PokemonId, entity.CurrentPos, entity.PlayerId);
+                            var pkmn = initPokemon(entity.Id, entity.PokemonId, entity.Level, entity.CurrentPos, entity.PlayerId);
                             pkmn.HP = entity.HP;
                             pkmn.MaxHP = entity.MaxHP;
                             turns.Add(pkmn);
@@ -457,12 +457,13 @@ public class Battle : MonoBehaviour
             {
                 var textObject = new GameObject("text");
                 textObject.transform.parent = canvas.transform;
-                textObject.transform.localPosition = new Vector3(350, 300 - index * 50, 0);
+                textObject.transform.localPosition = new Vector3(320, 300 - index * 50, 0);
                 var textComp = textObject.AddComponent<Text>();
                 textComp.fontSize = 20;
                 textComp.font = Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font;
                 var text = (index == currentTurn) ? " -> " : "    ";
                 text += turn.Pokemon.name + " ";
+                text += "L" + turn.Level + " ";
                 text += "HP: " + turn.HP + "/" + turn.MaxHP + " ";
                 text += "AP: " + turn.AP + "/" + turn.MaxAP + " ";
                 text += "MP: " + turn.MP + "/" + turn.MaxMP + " ";
@@ -568,7 +569,7 @@ public class Battle : MonoBehaviour
                     }
                     else
                     {
-                        HighlightAction(new BattleEntity(0, 0, Global.Instance.PlayerId));
+                        HighlightAction(new BattleEntity(0, 0, Global.Instance.PlayerId,0));
                     }
                 }
             }
@@ -609,15 +610,13 @@ public class Battle : MonoBehaviour
     }
 
 
-    private BattleEntityClient initPokemon(int id, int pokemonId, Position pos, int playerId)
+    private BattleEntityClient initPokemon(int id, int pokemonId, int level, Position pos, int playerId)
     {
         var entitiesNode = GameObject.FindGameObjectWithTag("Entities");
 
-        var battleEntity = new BattleEntityClient(id, pokemonId, playerId);
+        var battleEntity = new BattleEntityClient(id, pokemonId, playerId, level);
 
         battleEntity.Pokemon.transform.parent = entitiesNode.transform;
-
-        //todo attaques
 
         entities.Add(id, battleEntity);
 

@@ -796,6 +796,10 @@ public class Map : MonoBehaviour
                             {
                                 overlaySpriteRenderer.sprite = Resources.Load<Sprite>("swimming");
                                 entity.OverlayObject.SetActive(true);
+                            } else if (entity.State == EntityState.Flying)
+                            {
+                                overlaySpriteRenderer.sprite = Resources.Load<Sprite>("shadow");
+                                entity.OverlayObject.SetActive(true);
                             } else
                             {
                                 overlaySpriteRenderer.sprite = null;
@@ -874,15 +878,24 @@ public class Map : MonoBehaviour
                 {
                     Vector3 currentPos = entity.Object.transform.position;
                     entity.Object.transform.position = new Vector3(currentPos.x + 0.005f, currentPos.y + 0.015f, currentPos.z);
-
                 }
+
 
                 //decalage vertical des pokemons
                 if (entity.PokedexId != -1)
                 {
-                    entity.Object.transform.Translate(new Vector3(0, tilesize / 4, 0)); // 4 ?
+                    entity.Object.transform.Translate(new Vector3(0, tilesize / 4, 0));// 4 ?
+                    var overlayPos = entity.OverlayObject.transform.localPosition;
+                    //decalage pour le vol
+                    if (entity.State == EntityState.Flying)
+                    {
+                        entity.Object.transform.Translate(new Vector3(0, tilesize / 4, 0));
+                        entity.OverlayObject.transform.localPosition = new Vector3(overlayPos.x, - tilesize / 4, overlayPos.z);
+                    } else
+                    {
+                        entity.OverlayObject.transform.localPosition = new Vector3(overlayPos.x, 0, overlayPos.z);
+                    }
                 }
-
             }
             else
             {

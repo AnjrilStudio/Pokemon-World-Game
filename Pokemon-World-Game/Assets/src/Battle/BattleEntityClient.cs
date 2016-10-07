@@ -11,7 +11,7 @@ class BattleEntityClient : BattleEntity
 {
     public GameObject Pokemon { get; set; }
 
-    public BattleEntityClient(int id, int pokedexId, int playerId) : base (id, pokedexId, playerId)
+    public BattleEntityClient(int id, int pokedexId, int playerId, int level) : base (id, pokedexId, playerId, level)
     {
         var pkmnObj = GameObject.Instantiate(Resources.Load("PokemonPrefab")) as GameObject;
         pkmnObj.transform.localScale = new Vector3(1.25f, 1.25f, 1);

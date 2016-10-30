@@ -27,8 +27,9 @@ public class ParticleGenerator : MonoBehaviour {
     private string defaultPrefabName = "flame";
 
     private List<Particle> particules;
-    private float timer;
-    private float time;
+    private List<float> timers;
+    private List<float> randoms;
+    private float globalTime;
     
     public ParticlePattern Pattern { get; set; }
     public string PrefabName { get; set; }
@@ -36,7 +37,6 @@ public class ParticleGenerator : MonoBehaviour {
 
     void Awake()
     {
-        //pattern = new CircleSpiralParticlePattern(1000, 1, 2f);
         Pattern = defaultPattern;
         PrefabName = defaultPrefabName;
         Target = new Vector3();
@@ -45,49 +45,56 @@ public class ParticleGenerator : MonoBehaviour {
     // Use this for initialization
     void Start() {
         particules = new List<Particle>();
-        timer = -Pattern.Delay;
-        time = -Pattern.Delay;
+        timers = new List<float>();
+        randoms = new List<float>();
+        for (int i = 0; i < 1 + Pattern.Repeat; i++)
+        {
+            timers.Add(-Pattern.Delay - Pattern.RepeatDelay * i);
+            randoms.Add(Random.value);
+        }
+        globalTime = -Pattern.Delay;
     }
 	
 	// Update is called once per frame
-	void Update () {
-        
+	void Update ()
+    {
+        globalTime += Time.deltaTime;
+        for (int i = 0; i < 1 + Pattern.Repeat; i++)
+        {
+            updateGenerator(i);
+        }
+    }
+
+    private void updateGenerator(int index)
+    {
+        timers[index] += Time.deltaTime;
+        var time = globalTime - Pattern.RepeatDelay * index;
+
         if (time > Pattern.Duration && particules.Count == 0)
         {
             Destroy(gameObject);
             return;
         }
-        timer += Time.deltaTime;
-        time += Time.deltaTime;
+
         updateParticules(Time.deltaTime);
 
         var rateTime = 1f / Pattern.Rate;
-        int i = Mathf.FloorToInt(timer / rateTime);
-        float reminder = timer - (float)i * rateTime;
+        int i = Mathf.FloorToInt(timers[index] / rateTime);
+        float reminder = timers[index] - (float)i * rateTime;
         //TODO s'assurer que toute les boucles se font même si time dépasse la durée
-        while (timer > rateTime && time < Pattern.Duration)
+        while (timers[index] > rateTime && time < Pattern.Duration)
         {
             i--;
-            foreach(float angle in Pattern.ComputeAngles(time - reminder - rateTime * i, Target))
+            foreach (float angle in Pattern.ComputeAngles(time - reminder - rateTime * i, Target, randoms[index]))
             {
-                /*var particuleObj = new GameObject();
-                var meshFilter = particuleObj.AddComponent<MeshFilter>();
-                meshFilter.mesh = mesh;
-
-                var meshRenderer = particuleObj.AddComponent<MeshRenderer>();
-                var mats = meshRenderer.materials;
-                mats[0] = new Material(material);
-                meshRenderer.materials = mats;
-                //mats[0].color = new Color(1, Random.value * 0.92f, Random.value * 0.16f);*/
-
                 var particuleObj = GameObject.Instantiate(Resources.Load(PrefabName)) as GameObject;
                 particuleObj.transform.parent = gameObject.transform;
 
-                particuleObj.transform.localPosition = Pattern.ComputeCenter(time - reminder - rateTime * i, Target);
-            
+                particuleObj.transform.localPosition = Pattern.ComputeCenter(time - reminder - rateTime * i, Target, randoms[index]);
+
                 particuleObj.transform.localRotation = Quaternion.Euler(0, 0, Pattern.ComputeRotation());
-                
-                var particule = new Particle(particuleObj, angle, Pattern.ComputeSpeed(), Pattern.ComputeScale(), Pattern.ComputeRotationSpeed(), Pattern.LifeTime);
+
+                var particule = new Particle(particuleObj, angle, Pattern.ComputeSpeed(time - reminder - rateTime * i, randoms[index]), Pattern.ComputeScale(), Pattern.ComputeRotationSpeed(), Pattern.LifeTime);
                 updateParticule(particule, reminder);
                 if (i != 0)
                 {
@@ -97,7 +104,7 @@ public class ParticleGenerator : MonoBehaviour {
                 particules.Add(particule);
             }
 
-            timer -= rateTime;
+            timers[index] -= rateTime;
         }
     }
 
@@ -118,12 +125,11 @@ public class ParticleGenerator : MonoBehaviour {
             //part.Speed = Mathf.Lerp(part.MaxSpeed, part.MaxSpeed / 2, part.Time / part.LifeTime);
             var oldPos = part.Obj.transform.localPosition;
             part.Obj.transform.localPosition = new Vector3(oldPos.x + Mathf.Cos(part.Angle * Mathf.PI / 180) * part.Speed * deltaTime, oldPos.y + Mathf.Sin(part.Angle * Mathf.PI / 180) * part.Speed * deltaTime, oldPos.z);
-            part.Obj.transform.localScale = new Vector3(part.Scale, part.Scale, part.Scale);
+
+            var scale = Pattern.ComputeScale(part.Time / part.LifeTime);
+            part.Obj.transform.localScale = Vector3.one * scale;
+
             part.Obj.transform.Rotate(0, 0, deltaTime * part.RotationSpeed);
-            /*if (part.Rotation < 0)
-            {
-                part.Obj.GetComponent<MeshRenderer>().materials[0].color = new Color(1, Mathf.Lerp(0.92f, 0, part.Time / part.LifeTime), Mathf.Lerp(0.16f, 0, part.Time / part.LifeTime));
-            }*/
             
             part.Time += deltaTime;
             if (part.Time > part.LifeTime)

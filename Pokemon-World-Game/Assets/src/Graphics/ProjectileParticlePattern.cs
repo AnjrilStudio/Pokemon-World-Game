@@ -14,14 +14,14 @@ class ProjectileParticlePattern : ParticlePattern
         LifeTime = 0.25f;
     }
 
-    public override List<float> ComputeAngles(float time, Vector3 target)
+    public override List<float> ComputeAngles(float time, Vector3 target, float random)
     {
         List < float > angles = new List<float>();
         angles.Add(0);
         return angles;
     }
 
-    public override Vector3 ComputeCenter(float time, Vector3 target)
+    public override Vector3 ComputeCenter(float time, Vector3 target, float random)
     {
         return Vector3.Lerp(Vector3.zero, target, time / Duration);
     }

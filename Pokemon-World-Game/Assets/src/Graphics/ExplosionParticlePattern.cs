@@ -18,7 +18,7 @@ class ExplosionParticlePattern : ParticlePattern
         Scale = 4f;
     }
 
-    public override List<float> ComputeAngles(float time, Vector3 target)
+    public override List<float> ComputeAngles(float time, Vector3 target, float random)
     {
         List < float > angles = new List<float>();
         for(float angle = 0; angle < 360; angle += 360 / 60)
@@ -28,12 +28,12 @@ class ExplosionParticlePattern : ParticlePattern
         return angles;
     }
 
-    public override Vector3 ComputeCenter(float time, Vector3 target)
+    public override Vector3 ComputeCenter(float time, Vector3 target, float random)
     {
         return Vector3.zero;
     }
 
-    public override float ComputeSpeed()
+    public override float ComputeSpeed(float time, float random)
     {
         return Speed + ((-1 + UnityEngine.Random.value * 2) * SpeedOffset / 2);
     }

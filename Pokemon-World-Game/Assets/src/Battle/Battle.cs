@@ -12,6 +12,7 @@ public class Battle : MonoBehaviour
 
     private List<BattleEntityClient> turns;
     private Dictionary<int, BattleEntityClient> entities;
+    private Dictionary<int, GroundEffectClient> groundEffects;
     private List<int> pokemonToGoList;
     private float tilesize = 0.32f;
     private BattleArenaClient arena;
@@ -82,6 +83,7 @@ public class Battle : MonoBehaviour
         turns = new List<BattleEntityClient>();
         pokemonToGoList = new List<int>();
         entities = new Dictionary<int, BattleEntityClient>();
+        groundEffects = new Dictionary<int, GroundEffectClient>();
 
 
         trainerActions = new List<Action>();
@@ -113,6 +115,8 @@ public class Battle : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        updateGroundEffects();
+
         if (Global.Instance.BattleStartMessages.Count > 0)
         {
             BattleStartMessage message = Global.Instance.BattleStartMessages.Dequeue();
@@ -139,6 +143,7 @@ public class Battle : MonoBehaviour
                 }
                 if (battleaction.ActionId == currentActionNumber + 1)
                 {
+                    //end battle
                     battleaction = Global.Instance.BattleActionMessages.Dequeue();
                     if (battleaction.State == null)
                     {
@@ -146,11 +151,13 @@ public class Battle : MonoBehaviour
                         return;
                     }
 
+                    //fx
                     if (battleaction.Action != null)
                     {
                         PlayTurn(turns[currentTurn], battleaction.Target, battleaction.Action, battleaction.Dir);
                     }
 
+                    //maj entities
                     List<int> actualEntities = new List<int>();
                     List<int> entitiesToAdd = new List<int>();
                     BattleStateMessage battlestate = battleaction.State;
@@ -203,6 +210,29 @@ public class Battle : MonoBehaviour
 
                     currentActionNumber++;
                     currentTurn = battlestate.CurrentTurn;
+
+                    //maj ground fx
+                    List<int> toRemove = new List<int>();
+                    foreach (int groundEffectId in groundEffects.Keys)
+                    {
+                        if (!battlestate.GroundEffects.Exists(e => e.InstanceId == groundEffectId))
+                        {
+                            toRemove.Add(groundEffectId);
+                        }
+                    }
+                    toRemove.ForEach(i => groundEffects.Remove(i));
+
+                    Debug.Log("fx : " + battlestate.GroundEffects.Count);
+                    Debug.Log("current fx : " + groundEffects.Count);
+                    foreach (BattleStateGroundEffect groundEffect in battlestate.GroundEffects)
+                    {
+                        if (!groundEffects.ContainsKey(groundEffect.InstanceId))
+                        {
+                            groundEffects.Add(groundEffect.InstanceId, new GroundEffectClient(groundEffect));
+                            Debug.Log("add fx");
+                        }
+                    }
+
 
                     UpdateTrainerActions(battleaction.ActionsAvailable);
                     isCurrentActionTrainer = false;
@@ -638,6 +668,32 @@ public class Battle : MonoBehaviour
         foreach (TrainerAction action in actions)
         {
             trainerActions.Add(TrainerActions.Get(action));
+        }
+    }
+
+    private void updateGroundEffects()
+    {
+        foreach (GroundEffectClient groundEffect in groundEffects.Values)
+        {
+            groundEffect.Timer += Time.deltaTime;
+
+            if (groundEffect.Timer >= 0)
+            {
+                foreach (FxDescriptor fx in GroundFx.Get((GroundEffectOverTimeId)groundEffect.EffectId))
+                {
+                    if (fx.Pattern != null && fx.PrefabName != null)
+                    {
+                        Debug.Log("fx");
+                        GameObject fxObj = new GameObject();
+                        var partgen = fxObj.AddComponent<ParticleGenerator>();
+                        partgen.Pattern = fx.Pattern;
+                        partgen.PrefabName = fx.PrefabName;
+                        fxObj.transform.position = new Vector3(tilesize * groundEffect.Position.X, -tilesize * groundEffect.Position.Y, 0);
+
+                        groundEffect.Timer -= fx.Pattern.Duration;
+                    }
+                }
+            }
         }
     }
 

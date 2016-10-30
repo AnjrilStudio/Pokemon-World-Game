@@ -8,5 +8,10 @@ public abstract class ParticlePatternModifier
 {
     public abstract ParticlePatternModifierType Type();
 
-    public abstract float Compute();
+    public abstract float Compute(float time);
+
+    public float Compute()
+    {
+        return Compute(0);
+    }
 }

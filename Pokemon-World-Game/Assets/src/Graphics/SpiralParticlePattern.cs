@@ -14,14 +14,14 @@ class SpiralParticlePattern : ParticlePattern
         AngleRate = angleRate;
     }
 
-    public override List<float> ComputeAngles(float time, Vector3 target)
+    public override List<float> ComputeAngles(float time, Vector3 target, float random)
     {
         List<float> angles = new List<float>();
         angles.Add(AngleRate * time);
         return angles;
     }
 
-    public override Vector3 ComputeCenter(float time, Vector3 target)
+    public override Vector3 ComputeCenter(float time, Vector3 target, float random)
     {
         return new Vector3(0, 0, 0);
     }

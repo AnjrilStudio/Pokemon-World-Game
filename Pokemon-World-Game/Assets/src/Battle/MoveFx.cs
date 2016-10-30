@@ -47,9 +47,18 @@ class MoveFx
                 break;
 
             case Move.Gust:
-                FxDescriptor fxGust = new FxDescriptor("flame");
-                fxGust.Pattern = new RandomLineParticlePattern(0.15f);
-                fxGust.Pattern.AddModifier(new RandomRotationModifier());
+                FxDescriptor fxGust = new FxDescriptor("greydot3");
+                fxGust.Pattern = new VerticalEllipticParticlePattern(0.1f, 0.015f, -0.8f, -0.8f, 22f, -0.15f);
+                fxGust.Pattern.Scale = 0.07f;
+                fxGust.Pattern.Rate = 350f;
+                fxGust.Pattern.Speed = 0.07f;
+                fxGust.Pattern.LifeTime = 0.8f;
+                fxGust.Pattern.Duration = 1.2f;
+                fxGust.Pattern.Repeat = 28;
+                fxGust.Pattern.RepeatDelay = 0.08f;
+                fxGust.Pattern.RotationSpeed = 0f;
+                fxGust.Pattern.AddModifier(new OverTimeScaleModifier(0.07f, 0f));
+                //fxGust.Pattern.AddModifier(new RandomRotationModifier());
                 fxGust.Type = FxType.FromTarget;
                 fx.Add(fxGust);
                 break;

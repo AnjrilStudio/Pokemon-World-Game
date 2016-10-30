@@ -13,6 +13,8 @@ public abstract class ParticlePattern
     public float LifeTime { get; set; }
     public float Duration { get; set; }
     public float Delay { get; set; }
+    public int Repeat { get; set; }
+    public float RepeatDelay { get; set; }
     public float Rotation { get; set; }
     public float RotationSpeed { get; set; }
 
@@ -22,6 +24,8 @@ public abstract class ParticlePattern
     private float defaultLifeTime = 0.5f;
     private float defaultDuration = 0.5f;
     private float defaultDelay = 0;
+    private int defaultRepeat = 0;
+    private float defaultRepeatDelay = 1;
     private float defaultRotationSpeed = 400f;
     private float defaultRotation = 0f;
 
@@ -35,6 +39,8 @@ public abstract class ParticlePattern
         LifeTime = defaultLifeTime;
         Duration = defaultDuration;
         Delay = defaultDelay;
+        Repeat = defaultRepeat;
+        RepeatDelay = defaultRepeatDelay;
         Rotation = defaultRotation;
         RotationSpeed = defaultRotationSpeed;
 
@@ -46,11 +52,11 @@ public abstract class ParticlePattern
         modifiers.Add(modifier);
     }
 
-    public abstract List<float> ComputeAngles(float time, Vector3 target);
+    public abstract List<float> ComputeAngles(float time, Vector3 target, float random);
 
-    public abstract Vector3 ComputeCenter(float time, Vector3 target);
+    public abstract Vector3 ComputeCenter(float time, Vector3 target, float random);
 
-    public virtual float ComputeSpeed()
+    public virtual float ComputeSpeed(float time, float random)
     {
         return Speed;
     }
@@ -84,6 +90,18 @@ public abstract class ParticlePattern
         {
             if (m.Type() == ParticlePatternModifierType.Scale)
                 scale += m.Compute();
+        }
+        return scale;
+    }
+
+    public float ComputeScale(float time)
+    {
+        var scale = Scale;
+
+        foreach (ParticlePatternModifier m in modifiers)
+        {
+            if (m.Type() == ParticlePatternModifierType.ScaleOverTime)
+                scale += m.Compute(time);
         }
         return scale;
     }

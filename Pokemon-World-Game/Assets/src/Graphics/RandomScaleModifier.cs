@@ -13,7 +13,7 @@ class RandomScaleModifier : ScaleModifier
         ScaleOffset = scaleOffset;
     }
 
-    public override float Compute()
+    public override float Compute(float time)
     {
         return ((-1 + UnityEngine.Random.value * 2) * ScaleOffset / 2);
     }

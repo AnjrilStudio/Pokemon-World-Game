@@ -16,7 +16,7 @@ class ProjectileArcParticlePattern : ProjectileParticlePattern
 
     //TODO angles
 
-    public override Vector3 ComputeCenter(float time, Vector3 target)
+    public override Vector3 ComputeCenter(float time, Vector3 target, float random)
     {
         Vector3 arcCenter = target * 0.5F;
         float angle = Mathf.Atan2(target.y, target.x);

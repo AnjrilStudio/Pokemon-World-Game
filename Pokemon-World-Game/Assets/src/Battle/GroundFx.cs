@@ -31,8 +31,8 @@ class GroundFx
                 fxGust.Pattern.Speed = 0.07f;
                 fxGust.Pattern.LifeTime = 0.8f;
                 fxGust.Pattern.Duration = 1.2f;
-                fxGust.Pattern.Repeat = 14;
-                fxGust.Pattern.RepeatDelay = 0.16f;
+                fxGust.Pattern.Repeat = 10;
+                fxGust.Pattern.RepeatDelay = 0.20f;
                 fxGust.Pattern.RotationSpeed = 0f;
                 fxGust.Pattern.AddModifier(new OverTimeScaleModifier(0.07f, 0f));
                 //fxGust.Pattern.AddModifier(new RandomRotationModifier());

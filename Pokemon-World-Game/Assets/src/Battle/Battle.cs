@@ -399,6 +399,11 @@ public class Battle : MonoBehaviour
             }
         }
 
+        //todo animation de deplacement
+        if ((Move)action.Id == Move.Move){
+            animTimer = -0.5f;
+        }
+
         var spriteRenderer = entity.Pokemon.GetComponent<SpriteRenderer>();
         switch (dir)
         {
@@ -683,7 +688,6 @@ public class Battle : MonoBehaviour
                 {
                     if (fx.Pattern != null && fx.PrefabName != null)
                     {
-                        Debug.Log("fx");
                         GameObject fxObj = new GameObject();
                         var partgen = fxObj.AddComponent<ParticleGenerator>();
                         partgen.Pattern = fx.Pattern;

@@ -39,6 +39,7 @@ class BattleEntityClient : BattleEntity
         MaxAP = entity.MaxAP;
         MP = entity.MP;
         MaxMP = entity.MaxMP;
+        APMP = entity.APMP;
         ComingBack = entity.ComingBack;
         if (entity.ComingBack)
         {

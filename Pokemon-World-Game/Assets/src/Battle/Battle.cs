@@ -16,7 +16,6 @@ public class Battle : MonoBehaviour
     private List<int> pokemonToGoList;
     private float tilesize = 0.32f;
     private BattleArenaClient arena;
-    private int mapsize = 10;
     public int currentTurn = 0;
     private int currentActionNumber = -1;
 
@@ -26,6 +25,7 @@ public class Battle : MonoBehaviour
     private bool isPokemonGoSelection;
 
     public GameObject hover;
+    public GameObject scaleNode;
     private List<GameObject> highlightRange;
     private List<GameObject> highlightAOE;
 
@@ -79,7 +79,7 @@ public class Battle : MonoBehaviour
 
         mouseTilePos = new Position(0, 0);
 
-        arena = new BattleArenaClient(mapsize, 0.32f);
+        arena = new BattleArenaClient(20, 0.32f);
         turns = new List<BattleEntityClient>();
         pokemonToGoList = new List<int>();
         entities = new Dictionary<int, BattleEntityClient>();
@@ -92,13 +92,10 @@ public class Battle : MonoBehaviour
         trainerActions.Add(TrainerActions.Get(TrainerAction.Pokemon_Come_Back));
         trainerActions.Add(TrainerActions.Get(TrainerAction.Pokeball));
 
+        scaleNode = GameObject.FindGameObjectWithTag("BattleScale");
         hover = GameObject.Instantiate(Resources.Load("hover")) as GameObject;
         hover.SetActive(false);
-
-        Camera camera = GetComponent<Camera>();
-        camera.orthographicSize = 2;
-        gameObject.transform.position = new Vector3(tilesize * (arena.ArenaSize - 1) / 2, -tilesize * (arena.ArenaSize - 1) / 2, gameObject.transform.position.z);
-        gameObject.transform.position = new Vector3(gameObject.transform.position.x + 1, gameObject.transform.position.y - 0.35f, gameObject.transform.position.z);
+        hover.transform.parent = scaleNode.transform;
 
         highlightRange = new List<GameObject>();
         highlightAOE = new List<GameObject>();
@@ -110,6 +107,15 @@ public class Battle : MonoBehaviour
         isPokemonGoSelection = false;
         currentActionInt = -1;
         //HighlightAction(playerTurn);
+    }
+
+    private void initCamera()
+    {
+        Camera camera = GetComponent<Camera>();
+        camera.orthographicSize = 2;
+        var cameraOffset = 10; //?
+        gameObject.transform.position = new Vector3(tilesize * (cameraOffset - 1) / 2, -tilesize * (cameraOffset - 1) / 2, gameObject.transform.position.z);
+        gameObject.transform.position = new Vector3(gameObject.transform.position.x + 1, gameObject.transform.position.y - 0.35f, gameObject.transform.position.z);
     }
 
     // Update is called once per frame
@@ -149,6 +155,16 @@ public class Battle : MonoBehaviour
                     {
                         SceneManager.LoadScene("scene_map");
                         return;
+                    }
+                    
+                    //maj arena
+                    if (battleaction.Arena != null)
+                    {
+                        arena.update(battleaction.Arena);
+                        var scaleValue = 10f / Mathf.Max(arena.Width, arena.Height);
+                        scaleNode.transform.localScale = new Vector3(scaleValue, scaleValue, 1);
+
+                        initCamera();
                     }
 
                     //fx
@@ -221,18 +237,14 @@ public class Battle : MonoBehaviour
                         }
                     }
                     toRemove.ForEach(i => groundEffects.Remove(i));
-
-                    Debug.Log("fx : " + battlestate.GroundEffects.Count);
-                    Debug.Log("current fx : " + groundEffects.Count);
+                    
                     foreach (BattleStateGroundEffect groundEffect in battlestate.GroundEffects)
                     {
                         if (!groundEffects.ContainsKey(groundEffect.InstanceId))
                         {
                             groundEffects.Add(groundEffect.InstanceId, new GroundEffectClient(groundEffect));
-                            Debug.Log("add fx");
                         }
                     }
-
 
                     UpdateTrainerActions(battleaction.ActionsAvailable);
                     isCurrentActionTrainer = false;
@@ -259,23 +271,25 @@ public class Battle : MonoBehaviour
             //pointer control
             Camera camera = GetComponent<Camera>();
             Vector3 p = camera.WorldToScreenPoint(new Vector3(0, 0, -10));
+            var scaleX = scaleNode.transform.localScale.x;
+            var scaleY = scaleNode.transform.localScale.y;
 
             mousex = Input.mousePosition.x - p.x;
             mousey = Input.mousePosition.y - p.y;
 
             Vector3 p2 = camera.ViewportToWorldPoint(new Vector3(mousex, mousey, 10));
-            var x0 = p2.x / tilesize / Screen.width;
-            var y0 = -p2.y / tilesize / Screen.height;
+            var x0 = p2.x / (tilesize * scaleX) / Screen.width;
+            var y0 = -p2.y / (tilesize * scaleY) / Screen.height;
 
             var mousetileposx = Mathf.RoundToInt(x0);
             var mousetileposy = Mathf.RoundToInt(y0);
             mouseTilePos = new Position(mousetileposx, mousetileposy);
 
             //hover
-            if (mouseTilePos.X >= 0 && mouseTilePos.X < mapsize && mouseTilePos.Y >= 0 && mouseTilePos.Y < mapsize)
+            if (mouseTilePos.X >= 0 && mouseTilePos.X < arena.Width && mouseTilePos.Y >= 0 && mouseTilePos.Y < arena.Height)
             {
                 //pointer tile
-                hover.transform.position = new Vector3(tilesize * mouseTilePos.X, -tilesize * mouseTilePos.Y, 0);
+                hover.transform.localPosition = new Vector3(tilesize * mouseTilePos.X, -tilesize * mouseTilePos.Y, 0);
                 hover.SetActive(true);
 
                 //todo faire que si la case change
@@ -373,26 +387,28 @@ public class Battle : MonoBehaviour
 
     private void PlayTurn(BattleEntityClient entity, Position target, Action action, Direction dir)
     {
-        var currentPos = new Vector3(tilesize * entity.CurrentPos.X, -tilesize * entity.CurrentPos.Y, 0);
-        var targetPos = new Vector3(tilesize * target.X, -tilesize * target.Y, 0);
+        var currentPos = new Vector3(tilesize * entity.CurrentPos.X, -tilesize * entity.CurrentPos.Y, -2);
+        var targetPos = new Vector3(tilesize * target.X, -tilesize * target.Y, -2);
         
         foreach (FxDescriptor fx in MoveFx.Get((Move)action.Id))
         {
             if (fx.Pattern != null && fx.PrefabName != null)
             {
                 GameObject fxObj = new GameObject();
+                fxObj.transform.parent = scaleNode.transform;
+                fxObj.transform.localScale = new Vector3(1, 1, 1);
                 var partgen = fxObj.AddComponent<ParticleGenerator>();
                 partgen.Pattern = fx.Pattern;
                 partgen.PrefabName = fx.PrefabName;
                 if (fx.Type == FxType.FromTarget)
                 {
-                    fxObj.transform.position = targetPos;
+                    fxObj.transform.localPosition = targetPos;
                     fxObj.transform.rotation = Quaternion.AngleAxis(ClientUtils.GetDirRotation(dir), Vector3.back);
                 }
                 else if (fx.Type == FxType.ToTarget)
                 {
                     partgen.Target = targetPos - currentPos;
-                    fxObj.transform.position = currentPos;
+                    fxObj.transform.localPosition = currentPos;
                 }
 
                 animTimer = Mathf.Min(-(fx.Pattern.Duration + fx.Pattern.Delay), animTimer);
@@ -453,14 +469,18 @@ public class Battle : MonoBehaviour
         foreach (Position target in action.InRangeTiles(self, arena))
         {
             var highlight = GameObject.Instantiate(Resources.Load("highlight")) as GameObject;
-            highlight.transform.position = new Vector3(tilesize * target.X, -tilesize * target.Y, 0);
+            highlight.transform.parent = scaleNode.transform;
+            highlight.transform.localPosition = new Vector3(tilesize * target.X, -tilesize * target.Y, 0);
+            highlight.transform.localScale = new Vector3(1, 1, 1);
             highlightRange.Add(highlight);
         }
 
         foreach (Position target in action.InRange2Tiles(self, arena))
         {
             var highlight = GameObject.Instantiate(Resources.Load("highlight2")) as GameObject;
-            highlight.transform.position = new Vector3(tilesize * target.X, -tilesize * target.Y, 0);
+            highlight.transform.parent = scaleNode.transform;
+            highlight.transform.localPosition = new Vector3(tilesize * target.X, -tilesize * target.Y, 0);
+            highlight.transform.localScale = new Vector3(1, 1, 1);
             highlightRange.Add(highlight);
         }
     }
@@ -470,7 +490,9 @@ public class Battle : MonoBehaviour
         foreach (Position aoe in action.AoeTiles(self, target, dir, arena))
         {
             var aoeObj = GameObject.Instantiate(Resources.Load("aoe")) as GameObject;
-            aoeObj.transform.position = new Vector3(tilesize * aoe.X, -tilesize * aoe.Y, 0);
+            aoeObj.transform.parent = scaleNode.transform;
+            aoeObj.transform.localPosition = new Vector3(tilesize * aoe.X, -tilesize * aoe.Y, 0);
+            aoeObj.transform.localScale = new Vector3(1, 1, 1);
             highlightAOE.Add(aoeObj);
         }
     }
@@ -604,7 +626,7 @@ public class Battle : MonoBehaviour
                     }
                     else
                     {
-                        HighlightAction(new BattleEntity(0, 0, Global.Instance.PlayerId,0));
+                        //HighlightAction(new BattleEntity(0, 0, Global.Instance.PlayerId,0));
                     }
                 }
             }
@@ -652,6 +674,7 @@ public class Battle : MonoBehaviour
         var battleEntity = new BattleEntityClient(id, pokemonId, playerId, level);
 
         battleEntity.Pokemon.transform.parent = entitiesNode.transform;
+        battleEntity.Pokemon.transform.localScale = new Vector3(1.25f, 1.25f, 1);
 
         entities.Add(id, battleEntity);
 
@@ -689,10 +712,12 @@ public class Battle : MonoBehaviour
                     if (fx.Pattern != null && fx.PrefabName != null)
                     {
                         GameObject fxObj = new GameObject();
+                        fxObj.transform.parent = scaleNode.transform;
+                        fxObj.transform.localScale = new Vector3(1, 1, 1);
                         var partgen = fxObj.AddComponent<ParticleGenerator>();
                         partgen.Pattern = fx.Pattern;
                         partgen.PrefabName = fx.PrefabName;
-                        fxObj.transform.position = new Vector3(tilesize * groundEffect.Position.X, -tilesize * groundEffect.Position.Y, 0);
+                        fxObj.transform.localPosition = new Vector3(tilesize * groundEffect.Position.X, -tilesize * groundEffect.Position.Y, -2);
 
                         groundEffect.Timer -= fx.Pattern.Duration;
                     }

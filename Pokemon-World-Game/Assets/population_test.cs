@@ -213,7 +213,7 @@ public class population_test : MonoBehaviour
     {
         Position p = PositionUtils.GetDirPosition(dir, true);
         Position newPos = new Position(pop.Pos.X + p.X, pop.Pos.Y + p.Y);
-        newPos.NormalizePos(mapsize);
+        newPos.NormalizePos(mapsize, mapsize);
 
         populationMatrix[pop.Pos.X, pop.Pos.Y].Remove(pop);
         pop.Pos = newPos;
@@ -472,7 +472,7 @@ public class population_test : MonoBehaviour
             for (int j = 0; j < area; j++)
             {
                 var tmpPos = new Position(i + x - area / 2, j + y - area / 2);
-                tmpPos.NormalizePos(mapsize);
+                tmpPos.NormalizePos(mapsize, mapsize);
 
                 if (populationMatrix[tmpPos.X, tmpPos.Y].Count > 0)
                 {

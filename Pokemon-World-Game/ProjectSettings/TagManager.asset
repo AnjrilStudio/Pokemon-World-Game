@@ -9,6 +9,7 @@ TagManager:
   - Map
   - UserNameField
   - ServerIpField
+  - BattleScale
   layers:
   - Default
   - TransparentFX

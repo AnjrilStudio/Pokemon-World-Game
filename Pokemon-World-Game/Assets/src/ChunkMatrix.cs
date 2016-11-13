@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 
 
-class ChunkMatrix<T>
+public class ChunkMatrix<T>
 {
     private Dictionary<Position, T[,]> chunks;
     private int chunksize;

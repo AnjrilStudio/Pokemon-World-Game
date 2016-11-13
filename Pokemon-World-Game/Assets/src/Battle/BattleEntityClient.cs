@@ -11,10 +11,11 @@ class BattleEntityClient : BattleEntity
 {
     public GameObject Pokemon { get; set; }
 
+    private float verticalOffset = 0.08f;
+
     public BattleEntityClient(int id, int pokedexId, int playerId, int level) : base (id, pokedexId, playerId, level)
     {
         var pkmnObj = GameObject.Instantiate(Resources.Load("PokemonPrefab")) as GameObject;
-        pkmnObj.transform.localScale = new Vector3(1.25f, 1.25f, 1);
 
         var spriteRenderer = pkmnObj.GetComponent<SpriteRenderer>();
         spriteRenderer.sprite = Resources.Load<Sprite>("pokemonSprites/front/" + pokedexId);
@@ -26,7 +27,7 @@ class BattleEntityClient : BattleEntity
     public void MoveBattleEntity(Position target, BattleArenaClient arena)
     {
         arena.MoveBattleEntity(this, target);
-        Pokemon.transform.position = new Vector3(target.X * arena.Tilesize, -target.Y * arena.Tilesize, -2);
+        Pokemon.transform.localPosition = new Vector3(target.X * arena.Tilesize, -target.Y * arena.Tilesize + verticalOffset, -2);
         CurrentPos = new Position(target.X, target.Y);
     }
 

@@ -24,11 +24,14 @@ public class Map : MonoBehaviour
     private ChunkMatrix<GameObject> mapMatrix;
     private ChunkMatrix<GameObject> mapObjMatrix;
     private ChunkMatrix<List<GameObject>> mapOverlayMatrix;
+    private ChunkMatrix<List<string>> mapOverlayNameMatrix;
     private ChunkMatrix<Int32> groundMatrix;
     private ChunkMatrix<MapEntity> entityMatrix;
     private ChunkMatrix<List<PopulationEntity>> populationMatrix;
 
     private Dictionary<Int32, MapEntity> mapEntities;
+
+    private Queue<Position> mapLoadQueue;
 
     private float moveInputDelay = 0.2f;
 
@@ -56,8 +59,10 @@ public class Map : MonoBehaviour
         mapObjMatrix = new ChunkMatrix<GameObject>(chunksize);
         groundMatrix = new ChunkMatrix<Int32>(chunksize);
         mapOverlayMatrix = new ChunkMatrix<List<GameObject>>(chunksize);
+        mapOverlayNameMatrix = new ChunkMatrix<List<string>>(chunksize);
         populationMatrix = new ChunkMatrix<List<PopulationEntity>>(chunksize);
         mapEntities = new Dictionary<Int32, MapEntity>();
+        mapLoadQueue = new Queue<Position>();
 
     }
 
@@ -78,7 +83,21 @@ public class Map : MonoBehaviour
         if (Global.Instance.MapMessages.Count > 0)
         {
             MapMessage message = Global.Instance.MapMessages.Dequeue();
-            loadMap(message.Origin, message.Segments);
+            loadMap(message.Origin, message.Segments, message.TotalWidth);
+        }
+
+        if (mapLoadQueue.Count > 0)
+        {
+            for (int i = 0; i < 1; i++)
+            {
+                if (mapLoadQueue.Count > 0)
+                {
+                    Position p = mapLoadQueue.Dequeue();
+                    var mapNode = GameObject.FindGameObjectWithTag("Map");
+                    var overlayTool = new OverlayTool(groundMatrix, mapOverlayMatrix, mapOverlayNameMatrix, mapNode, tilesize, tileZLayerFactor);
+                    overlayTool.AddMapTileOverlay(p, 20, 20);
+                }
+            }
         }
 
         if (player != null)
@@ -216,7 +235,7 @@ public class Map : MonoBehaviour
         Global.Instance.Client.Disconnect(Global.Instance.PlayerId.ToString());
     }
 
-    private void loadMap(Position origin, string segments)
+    private void loadMap(Position origin, string segments, int totalWidth)
     {
         var mapArray = segments.Split(',');
         int i = origin.X, j = origin.Y;
@@ -233,6 +252,7 @@ public class Map : MonoBehaviour
                 int ground = int.Parse(tmp[0]);
 
                 groundMatrix[i, j] = ground;
+                //mapLoadQueue.Enqueue(new Position(i, j));
 
                 switch (ground)
                 {
@@ -293,21 +313,27 @@ public class Map : MonoBehaviour
                 }
 
                 mapOverlayMatrix[i, j] = new List<GameObject>();
+                mapOverlayNameMatrix[i, j] = new List<string>();
                 populationMatrix[i, j] = new List<PopulationEntity>();
             }
 
             i++;
-            if (i == origin.X + 60 - 1)
+            if (i == origin.X + totalWidth - 1)
             {
                 i = origin.X;
                 j++;
             }
+            if (i%20 == 0 && j%20 == 0)
+            {
+                mapLoadQueue.Enqueue(new Position(i, j));
+            }
         }
 
-        Debug.Log("map loaded");
+        //var overlayTool = new OverlayTool(groundMatrix, mapOverlayMatrix, mapOverlayNameMatrix, mapNode, tilesize, tileZLayerFactor);
+        //overlayTool.AddMapTileOverlay(origin, 60, 60);
         
-        var overlayTool = new OverlayTool(groundMatrix, mapOverlayMatrix, mapNode, tilesize, tileZLayerFactor);
-        overlayTool.AddMapTileOverlay(origin, 60, 60);
+        
+        Debug.Log("map loaded");
     }
 
     private void updateEntities()

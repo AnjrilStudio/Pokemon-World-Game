@@ -34,6 +34,7 @@ class BattleEntityClient : BattleEntity
     public void UpdateBattleEntity(BattleStateEntity entity, BattleArenaClient arena)
     {
         MoveBattleEntity(entity.CurrentPos, arena);
+        Level = entity.Level;
         HP = entity.HP;
         MaxHP = entity.MaxHP;
         AP = entity.AP;

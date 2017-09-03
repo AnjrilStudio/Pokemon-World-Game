@@ -12,6 +12,7 @@ class BattleArenaClient : Arena
     public GameObject[,] Tiles;
     public ChunkMatrix<Int32> TilesInt;
     public ChunkMatrix<List<GameObject>> OverlayMatrix;
+    public ChunkMatrix<List<String>> OverlayNameMatrix;
 
     private float tileZLayerFactor = 0.10f;
 
@@ -20,6 +21,7 @@ class BattleArenaClient : Arena
         Tilesize = tilesize;
         TilesInt = new ChunkMatrix<int>(100);
         OverlayMatrix = new ChunkMatrix<List<GameObject>>(100);
+        OverlayNameMatrix = new ChunkMatrix<List<String>>(100);
 
         init();
     }
@@ -88,7 +90,7 @@ class BattleArenaClient : Arena
             }
         }
 
-        var overlayTool = new OverlayTool(TilesInt, OverlayMatrix, parentNode, Tilesize, tileZLayerFactor);
+        var overlayTool = new OverlayTool(TilesInt, OverlayMatrix, OverlayNameMatrix, parentNode, Tilesize, tileZLayerFactor);
         overlayTool.AddArenaTileOverlay(new Position(0,0), Width, Height);
     }
 }

@@ -40,7 +40,7 @@ class TestParticleMesh : ParticleMesh
 
         mesh.RecalculateNormals();
         mesh.RecalculateBounds();
-        mesh.Optimize();
+        ;
 
         return mesh;
     }

@@ -9,15 +9,17 @@ public class OverlayTool
 {
     private ChunkMatrix<Int32> _groundMatrix;
     private ChunkMatrix<List<GameObject>> _mapOverlayMatrix;
+    private ChunkMatrix<List<string>> _mapOverlayNameMatrix;
     private GameObject _parentNode;
 
     private float _tilesize;
     private float _tileZLayerFactor;
 
-    public OverlayTool(ChunkMatrix<Int32> groundMatrix, ChunkMatrix<List<GameObject>> mapOverlayMatrix, GameObject parentNode, float tilesize, float tileZLayerFactor)
+    public OverlayTool(ChunkMatrix<Int32> groundMatrix, ChunkMatrix<List<GameObject>> mapOverlayMatrix, ChunkMatrix<List<string>> mapOverlayNameMatrix, GameObject parentNode, float tilesize, float tileZLayerFactor)
     {
         _groundMatrix = groundMatrix;
         _mapOverlayMatrix = mapOverlayMatrix;
+        _mapOverlayNameMatrix = mapOverlayNameMatrix;
         _parentNode = parentNode;
 
         _tilesize = tilesize;
@@ -70,17 +72,19 @@ public class OverlayTool
     private void addBorderOverlay(int i, int j, int fromTileType, int toTileType, string prefabName, int layer)
     {
         var tmppos = new Position(i, j);
-        var toppos = new Position(i, j - 1);
-        var botpos = new Position(i, j + 1);
-        var rightpos = new Position(i + 1, j);
-        var leftpos = new Position(i - 1, j);
-        var topleftpos = new Position(i - 1, j - 1);
-        var botleftpos = new Position(i - 1, j + 1);
-        var toprightpos = new Position(i + 1, j - 1);
-        var botrightpos = new Position(i + 1, j + 1);
 
         if (_groundMatrix[tmppos.X, tmppos.Y] == fromTileType)
         {
+            
+            var toppos = new Position(i, j - 1);
+            var botpos = new Position(i, j + 1);
+            var rightpos = new Position(i + 1, j);
+            var leftpos = new Position(i - 1, j);
+            var topleftpos = new Position(i - 1, j - 1);
+            var botleftpos = new Position(i - 1, j + 1);
+            var toprightpos = new Position(i + 1, j - 1);
+            var botrightpos = new Position(i + 1, j + 1);
+
             bool right = false;
             bool left = false;
             bool bottom = false;
@@ -186,10 +190,15 @@ public class OverlayTool
 
     private void instantiateOverlay(int i, int j, string prefab, float z)
     {
-        var overlay = GameObject.Instantiate(Resources.Load(prefab)) as GameObject;
-        overlay.transform.parent = _parentNode.transform;
-        overlay.transform.position = new Vector3(_tilesize * i, -_tilesize * j, -0.5f - z - j * _tileZLayerFactor);
-        overlay.SetActive(true);
-        _mapOverlayMatrix[i, j].Add(overlay);
+        if (!_mapOverlayNameMatrix[i, j].Contains(prefab))
+        {
+            var overlay = GameObject.Instantiate(Resources.Load(prefab)) as GameObject;
+            overlay.transform.parent = _parentNode.transform;
+            overlay.transform.position = new Vector3(_tilesize * i, -_tilesize * j, -0.5f - z - j * _tileZLayerFactor);
+            overlay.SetActive(true);
+            _mapOverlayMatrix[i, j].Add(overlay);
+            _mapOverlayNameMatrix[i, j].Add(prefab);
+        }
+        
     }
 }

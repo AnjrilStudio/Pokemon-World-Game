@@ -5,7 +5,7 @@ using System.Text;
 using UnityEngine;
 
 
-class RandomConeParticlePattern : ParticlePattern
+class RandomConeParticlePattern : ProjectileParticlePattern
 {
     public float AngleSpread { get; protected set; }
 

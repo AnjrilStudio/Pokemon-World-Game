@@ -190,7 +190,7 @@ public class OverlayTool
 
     private void instantiateOverlay(int i, int j, string prefab, float z)
     {
-        if (!_mapOverlayNameMatrix[i, j].Contains(prefab))
+        if (_mapOverlayNameMatrix[i, j] != null && !_mapOverlayNameMatrix[i, j].Contains(prefab))
         {
             var overlay = GameObject.Instantiate(Resources.Load(prefab)) as GameObject;
             overlay.transform.parent = _parentNode.transform;

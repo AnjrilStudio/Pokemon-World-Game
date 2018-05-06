@@ -5,7 +5,7 @@ using System.Text;
 using UnityEngine;
 
 
-class RandomLineParticlePattern : ParticlePattern
+class RandomLineParticlePattern : ProjectileParticlePattern
 {
     public float LateralOffset { get; protected set; }
 

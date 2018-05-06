@@ -10,6 +10,7 @@ TagManager:
   - UserNameField
   - ServerIpField
   - BattleScale
+  - Hover
   layers:
   - Default
   - TransparentFX

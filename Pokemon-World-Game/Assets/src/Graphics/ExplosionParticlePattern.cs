@@ -5,23 +5,31 @@ using System.Text;
 using UnityEngine;
 
 
-class ExplosionParticlePattern : ParticlePattern
+class ExplosionParticlePattern : ProjectileParticlePattern
 {
-    public float SpeedOffset { get; protected set; }
+    public float SpeedOffset { get; set; }
+    public int NbProj { get; set; }
 
-    public ExplosionParticlePattern(float speedOffset):base()
+    private float defaultSpeedOffset = 1f;
+    private float defaultLifeTime = 0.25f;
+    private float defaultSpeed = 1.5f;
+    private float defaultScale = 4f;
+    private int defaultNbProj = 8;
+
+    public ExplosionParticlePattern():base()
     {
-        SpeedOffset = speedOffset;
+        SpeedOffset = defaultSpeedOffset;
         Duration = 2 * 1f / Rate;
-        LifeTime = 0.25f;
-        Speed = 1.5f;
-        Scale = 4f;
+        LifeTime = defaultLifeTime;
+        Speed = defaultSpeed;
+        Scale = defaultScale;
+        NbProj = defaultNbProj;
     }
 
     public override List<float> ComputeAngles(float time, Vector3 target, float random)
     {
         List < float > angles = new List<float>();
-        for(float angle = 0; angle < 360; angle += 360 / 60)
+        for(float angle = 0; angle < 360; angle += 360 / NbProj)
         {
             angles.Add(angle);
         }

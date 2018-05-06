@@ -67,8 +67,19 @@ public class Battle : MonoBehaviour
         }
     }
     private Direction currentActionDir;
+    
+    private List<string> battleLog;
+
+    private Queue<DialogMessage> dialogBoxQueue;
+    private int textIndex = 0;
+    private float textTimer = 0;
+    bool dialogWriting = false;
+    bool dialogConfirm = false;
+    bool nextDialog = false;
+    bool moveDialog = false;
 
     private float animTimer = 0;
+    List<GameObject> currentFx;
 
 
 
@@ -84,6 +95,7 @@ public class Battle : MonoBehaviour
         pokemonToGoList = new List<int>();
         entities = new Dictionary<int, BattleEntityClient>();
         groundEffects = new Dictionary<int, GroundEffectClient>();
+        currentFx = new List<GameObject>();
 
 
         trainerActions = new List<Action>();
@@ -100,7 +112,13 @@ public class Battle : MonoBehaviour
         highlightRange = new List<GameObject>();
         highlightAOE = new List<GameObject>();
 
+        battleLog = new List<string>();
+        battleLog.Add("Debut du combat");
+
+        dialogBoxQueue = new Queue<DialogMessage>();
+
         displayGUI();
+        //initCamera();
 
         isCurrentActionTrainer = false;
         isPokemonGoAction = false;
@@ -111,17 +129,25 @@ public class Battle : MonoBehaviour
 
     private void initCamera()
     {
+        var scaleValue = 10f / Mathf.Max(arena.Width, arena.Height);
+        scaleNode.transform.localScale = new Vector3(scaleValue, scaleValue, 1);
+
         Camera camera = GetComponent<Camera>();
         camera.orthographicSize = 2;
         var cameraOffset = 10; //?
         gameObject.transform.position = new Vector3(tilesize * (cameraOffset - 1) / 2, -tilesize * (cameraOffset - 1) / 2, gameObject.transform.position.z);
         gameObject.transform.position = new Vector3(gameObject.transform.position.x + 1, gameObject.transform.position.y - 0.35f, gameObject.transform.position.z);
+
+        
     }
 
     // Update is called once per frame
     void Update()
     {
+        updateEffects();
         updateGroundEffects();
+        updateDamageEffects();
+        updateTextBox();
 
         if (Global.Instance.BattleStartMessages.Count > 0)
         {
@@ -130,7 +156,7 @@ public class Battle : MonoBehaviour
         }
 
         animTimer += Time.deltaTime;
-        if (animTimer >= 0)
+        if (animTimer >= 0 && currentFx.Count == 0) 
         {
             if (pokemonToGoList.Count > 0)
             {
@@ -149,110 +175,146 @@ public class Battle : MonoBehaviour
                 }
                 if (battleaction.ActionId == currentActionNumber + 1)
                 {
-                    //end battle
-                    battleaction = Global.Instance.BattleActionMessages.Dequeue();
-                    if (battleaction.State == null)
+                    //Debug.Log("action " + battleaction.ActionId + ", null " + (battleaction.Action == null) + ", movedialog " + moveDialog);
+                    bool continueAction = true;
+                    if (battleaction.Action != null && !moveDialog && (Move)battleaction.Action.Id != Move.Move)
                     {
-                        SceneManager.LoadScene("scene_map");
-                        return;
-                    }
-                    
-                    //maj arena
-                    if (battleaction.Arena != null)
-                    {
-                        arena.update(battleaction.Arena);
-                        var scaleValue = 10f / Mathf.Max(arena.Width, arena.Height);
-                        scaleNode.transform.localScale = new Vector3(scaleValue, scaleValue, 1);
-
-                        initCamera();
-                    }
-
-                    //fx
-                    if (battleaction.Action != null)
-                    {
-                        PlayTurn(turns[currentTurn], battleaction.Target, battleaction.Action, battleaction.Dir);
-                    }
-
-                    //maj entities
-                    List<int> actualEntities = new List<int>();
-                    List<int> entitiesToAdd = new List<int>();
-                    BattleStateMessage battlestate = battleaction.State;
-                    foreach (BattleStateEntity entity in battlestate.Entities)
-                    {
-                        actualEntities.Add(entity.Id);
-                        if (entities.ContainsKey(entity.Id))
+                        Debug.Log("logMove" + battleaction.ActionId);
+                        logMove(turns[currentTurn], (Move)battleaction.Action.Id);
+                        moveDialog = true;
+                        continueAction = false;
+                        
+                        //faire defiler le texte si l'action vient de soi-même
+                        if (battleaction.Action != null && turns[currentTurn].PlayerId == Global.Instance.PlayerId)
                         {
-                            var battleEntity = entities[entity.Id];
-                            battleEntity.UpdateBattleEntity(entity, arena);
+                            nextDialog = true;
                         }
-                        else
-                        {
-                            var pkmn = initPokemon(entity.Id, entity.PokemonId, entity.Level, entity.CurrentPos, entity.PlayerId);
-                            pkmn.HP = entity.HP;
-                            pkmn.MaxHP = entity.MaxHP;
-                            turns.Add(pkmn);
+                    }
 
-                            if (!spectator)
+                    //Debug.Log("dialogWriting " + dialogWriting + ", dialogConfirm " + dialogConfirm + " : " + battleaction.ActionId);
+                    if (!(dialogWriting && dialogConfirm) && continueAction)
+                    {
+                        Debug.Log("do action " + battleaction.ActionId);
+                        battleaction = Global.Instance.BattleActionMessages.Dequeue();
+                        //end battle
+                        if (battleaction.State == null)
+                        {
+                            SceneManager.LoadScene("scene_map");
+                            return;
+                        }
+                    
+                        //maj arena
+                        if (battleaction.Arena != null)
+                        {
+                            arena.update(battleaction.Arena);
+
+                            initCamera();
+                        }
+
+                        //fx
+                        if (battleaction.Action != null)
+                        {
+                            PlayTurn(turns[currentTurn], battleaction.Target, battleaction.Action, battleaction.Dir);
+                        }
+
+                        //maj entities
+                        List<int> actualEntities = new List<int>();
+                        List<int> entitiesToAdd = new List<int>();
+                        BattleStateMessage battlestate = battleaction.State;
+                        foreach (BattleStateEntity entity in battlestate.Entities)
+                        {
+                            actualEntities.Add(entity.Id);
+                            if (entities.ContainsKey(entity.Id))
                             {
-                                pkmn.Pokemon.SetActive(false);
-                                entitiesToAdd.Add(entity.Id);
+                                var battleEntity = entities[entity.Id];
+                                UpdatePokemon(battleEntity, entity);
+                            }
+                            else
+                            {
+                                var pkmn = initPokemon(entity.Id, entity.PokemonId, entity.Level, entity.CurrentPos, entity.PlayerId);
+                                pkmn.HP = entity.HP;
+                                pkmn.MaxHP = entity.MaxHP;
+                                turns.Add(pkmn);
+
+                                logPokemonGo(pkmn);
+                                //faire defiler le texte si l'action vient de soi-même
+                                if (entity.PlayerId == Global.Instance.PlayerId)
+                                {
+                                    //nextDialog = true;
+                                }
+
+                                if (!spectator)
+                                {
+                                    pkmn.Pokemon.SetActive(false);
+                                    entitiesToAdd.Add(entity.Id);
+                                }
                             }
                         }
-                    }
 
-                    List<int> entitiesToRemove = new List<int>();
-                    foreach (int id in entities.Keys)
-                    {
-                        if (!actualEntities.Contains(id))
+                        List<int> entitiesToRemove = new List<int>();
+                        foreach (int id in entities.Keys)
                         {
-                            entitiesToRemove.Add(id);
+                            if (!actualEntities.Contains(id))
+                            {
+                                entitiesToRemove.Add(id);
+                            }
                         }
-                    }
 
-                    foreach (int id in entitiesToRemove)
-                    {
-                        RemovePokemon(id);
-                    }
-
-                    turns.Clear();
-                    foreach (int id in actualEntities)
-                    {
-                        if (entitiesToAdd.Contains(id))
+                        foreach (int id in entitiesToRemove)
                         {
-                            pokemonToGoList.Add(turns.Count);
+                            RemovePokemon(id);
                         }
-                        turns.Add(entities[id]);
-                    }
 
-                    currentActionNumber++;
-                    currentTurn = battlestate.CurrentTurn;
-
-                    //maj ground fx
-                    List<int> toRemove = new List<int>();
-                    foreach (int groundEffectId in groundEffects.Keys)
-                    {
-                        if (!battlestate.GroundEffects.Exists(e => e.InstanceId == groundEffectId))
+                        turns.Clear();
+                        foreach (int id in actualEntities)
                         {
-                            toRemove.Add(groundEffectId);
+                            if (entitiesToAdd.Contains(id))
+                            {
+                                pokemonToGoList.Add(turns.Count);
+                            }
+                            turns.Add(entities[id]);
                         }
-                    }
-                    toRemove.ForEach(i => groundEffects.Remove(i));
+
+                        currentActionNumber++;
+                        currentTurn = battlestate.CurrentTurn;
+
+                        //maj ground fx
+                        List<int> toRemove = new List<int>();
+                        foreach (int groundEffectId in groundEffects.Keys)
+                        {
+                            if (!battlestate.GroundEffects.Exists(e => e.InstanceId == groundEffectId))
+                            {
+                                toRemove.Add(groundEffectId);
+                            }
+                        }
+                        toRemove.ForEach(i => groundEffects.Remove(i));
                     
-                    foreach (BattleStateGroundEffect groundEffect in battlestate.GroundEffects)
-                    {
-                        if (!groundEffects.ContainsKey(groundEffect.InstanceId))
+                        foreach (BattleStateGroundEffect groundEffect in battlestate.GroundEffects)
                         {
-                            groundEffects.Add(groundEffect.InstanceId, new GroundEffectClient(groundEffect));
+                            if (!groundEffects.ContainsKey(groundEffect.InstanceId))
+                            {
+                                groundEffects.Add(groundEffect.InstanceId, new GroundEffectClient(groundEffect));
+                            }
                         }
+
+                        UpdateTrainerActions(battleaction.ActionsAvailable);
+                        isCurrentActionTrainer = false;
+                        isPokemonGoAction = false;
+                        isPokemonGoSelection = false;
+                        displayGUI();
+                        ClearHighlight();
+                        currentActionInt = -1;
+
+                        //dialogue
+                        if (turns[currentTurn].PlayerId == Global.Instance.PlayerId && !turns[currentTurn].ComingBack && turns[currentTurn].Ready)
+                        {
+                            dialogWhatDo(turns[currentTurn]);
+                            //todo faire en sorte que le dialogue s'affiche pour le premier pokemongo
+                        }
+
+
                     }
 
-                    UpdateTrainerActions(battleaction.ActionsAvailable);
-                    isCurrentActionTrainer = false;
-                    isPokemonGoAction = false;
-                    isPokemonGoSelection = false;
-                    displayGUI();
-                    ClearHighlight();
-                    currentActionInt = -1;
                 }
 
             }
@@ -400,6 +462,7 @@ public class Battle : MonoBehaviour
                 var partgen = fxObj.AddComponent<ParticleGenerator>();
                 partgen.Pattern = fx.Pattern;
                 partgen.PrefabName = fx.PrefabName;
+                partgen.Active = !(dialogWriting && dialogConfirm);
                 if (fx.Type == FxType.FromTarget)
                 {
                     fxObj.transform.localPosition = targetPos;
@@ -411,13 +474,18 @@ public class Battle : MonoBehaviour
                     fxObj.transform.localPosition = currentPos;
                 }
 
-                animTimer = Mathf.Min(-(fx.Pattern.Duration + fx.Pattern.Delay), animTimer);
+                currentFx.Add(fxObj);
+                //animTimer = Mathf.Min(-(fx.Pattern.Duration + fx.Pattern.Delay), animTimer);
             }
         }
 
         //todo animation de deplacement
         if ((Move)action.Id == Move.Move){
             animTimer = -0.5f;
+        } else
+        {
+            Debug.Log("movedialog false");
+            moveDialog = false;
         }
 
         var spriteRenderer = entity.Pokemon.GetComponent<SpriteRenderer>();
@@ -503,7 +571,10 @@ public class Battle : MonoBehaviour
 
         foreach (Transform child in canvas.transform)
         {
-            GameObject.Destroy(child.gameObject);
+            if (child.name != "TextBox")//FIXME
+            {
+                GameObject.Destroy(child.gameObject);
+            }
         }
 
         //pokemons
@@ -530,6 +601,20 @@ public class Battle : MonoBehaviour
             index++;
         }
 
+        //battle log
+        int logIndex = 0;
+        foreach (string log in battleLog)
+        {
+            var textObject = new GameObject("log");
+            textObject.transform.parent = canvas.transform;
+            textObject.transform.localPosition = new Vector3(320, -100 - logIndex * 30, 0);
+            var textComp = textObject.AddComponent<Text>();
+            textComp.fontSize = 15;
+            textComp.font = Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font;
+            textComp.text = log;
+            textComp.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 400);
+            logIndex++;
+        }
 
 
         //boutons
@@ -607,34 +692,37 @@ public class Battle : MonoBehaviour
         int tmpIndex = index;
         buttonComp.onClick.AddListener(delegate
         {
-            if (action.Range != null)
+            if (!(dialogWriting && dialogConfirm))
             {
-                currentActionInt = tmpIndex;
-                isCurrentActionTrainer = isTrainer;
-                isPokemonGoSelection = isPokemonGo;
-                if (isTrainer && action.Id == (int)TrainerAction.Pokemon_Go)
+                if (action.Range != null)
                 {
-                    isPokemonGoAction = !isPokemonGoAction;
-                    displayGUI();
-                }
-                else
-                {
-                    isPokemonGoAction = false;
-                    if (turns.Count > 0)
+                    currentActionInt = tmpIndex;
+                    isCurrentActionTrainer = isTrainer;
+                    isPokemonGoSelection = isPokemonGo;
+                    if (isTrainer && action.Id == (int)TrainerAction.Pokemon_Go)
                     {
-                        HighlightAction(turns[currentTurn]);
+                        isPokemonGoAction = !isPokemonGoAction;
+                        displayGUI();
                     }
                     else
                     {
-                        //HighlightAction(new BattleEntity(0, 0, Global.Instance.PlayerId,0));
+                        isPokemonGoAction = false;
+                        if (turns.Count > 0)
+                        {
+                            HighlightAction(turns[currentTurn]);
+                        }
+                        else
+                        {
+                            //HighlightAction(new BattleEntity(0, 0, Global.Instance.PlayerId,0));
+                        }
                     }
                 }
-            }
-            else
-            {
-                if (isTrainer)
+                else
                 {
-                    Global.Instance.SendCommand(new BattleTrainerActionParam(new Position(0, 0), action, 0));
+                    if (isTrainer)
+                    {
+                        Global.Instance.SendCommand(new BattleTrainerActionParam(new Position(0, 0), action, 0));
+                    }
                 }
             }
         });
@@ -683,6 +771,35 @@ public class Battle : MonoBehaviour
         return battleEntity;
     }
 
+    private void UpdatePokemon(BattleEntityClient pokemon, BattleStateEntity state)
+    {
+        var currentHP = pokemon.HP;
+        if (!pokemon.ComingBack && state.ComingBack)
+        {
+            logPokemonComeBack(pokemon);
+            //faire defiler le texte si l'action vient de soi-même
+            if (pokemon.PlayerId == Global.Instance.PlayerId)
+            {
+                //nextDialog = true;
+            }
+        }
+
+        pokemon.UpdateBattleEntity(state, arena);
+        int damage = currentHP - pokemon.HP;
+        if (damage > 0)
+        {
+            //animation de prise de dégats
+            animTimer -= 0.2f;
+            pokemon.DamageAnimationTimer = 0.2f;
+            logDamage(pokemon, damage);
+
+            if (pokemon.HP == 0)
+            {
+                logPokemonKO(pokemon);
+            }
+        }
+    }
+
     private void RemovePokemon(int id)
     {
         arena.RemoveBattleEntity(entities[id]);
@@ -697,6 +814,34 @@ public class Battle : MonoBehaviour
         {
             trainerActions.Add(TrainerActions.Get(action));
         }
+    }
+
+    private void updateDamageEffects()
+    {
+        foreach(BattleEntityClient pokemon in entities.Values)
+        {
+            if (pokemon.DamageAnimationTimer > 0)
+            {
+                pokemon.Pokemon.SetActive(!pokemon.Pokemon.activeSelf);
+                pokemon.DamageAnimationTimer -= Time.deltaTime;
+
+                // au cas où pile à 0, il ne faut pas rester bloquer à false
+                if (pokemon.DamageAnimationTimer == 0)
+                {
+                    pokemon.Pokemon.SetActive(true);
+                }
+            } else if (pokemon.DamageAnimationTimer < 0)
+            {
+                pokemon.DamageAnimationTimer = 0;
+                pokemon.Pokemon.SetActive(true);
+            }
+        }
+    }
+
+    private void updateEffects()
+    {
+        currentFx.RemoveAll(fx => fx == null);
+        currentFx.ForEach(fx => fx.SetActive(!(dialogWriting && dialogConfirm)));
     }
 
     private void updateGroundEffects()
@@ -724,6 +869,172 @@ public class Battle : MonoBehaviour
                 }
             }
         }
+    }
+
+    private void updateTextBox()
+    {
+        var textSpeed = 0.015f;
+        GameObject canvas = GameObject.Find("Canvas");
+
+        var skip = false;
+        if ((Input.anyKeyDown && dialogConfirm))
+        {
+            skip = true;
+        }
+
+        if (dialogBoxQueue.Count > 0)
+        {
+            DialogMessage currentDialog = dialogBoxQueue.Peek();
+            dialogConfirm = currentDialog.Confirm;
+
+            if (textIndex <= currentDialog.Text.Length)
+            {
+                if (skip)
+                {
+                    //fait apparaitre le texte entier directement
+                    textIndex = currentDialog.Text.Length;
+                }
+
+                if (textIndex == 0)
+                {
+                    //initialisation d'un nouveau texte
+
+                    var textBoxObject = new GameObject("TextBox");
+                    textBoxObject.transform.parent = canvas.transform;
+                    textBoxObject.transform.localPosition = new Vector3(-500, -250, 0);
+
+                    //sprite
+                    var imgObject = new GameObject("image");
+                    imgObject.transform.parent = textBoxObject.transform;
+                    imgObject.transform.localPosition = new Vector3(0, 0, 0);
+
+                    var imgComp = imgObject.AddComponent<Image>();
+                    imgComp.sprite = Resources.Load<Sprite>("highlight");
+                    imgComp.color = Color.gray;
+                    var rect1 = imgObject.GetComponent<RectTransform>();
+                    rect1.pivot = new Vector2(0, 0);
+                    rect1.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 600);
+                    rect1.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 50);
+
+                    //text
+                    var textObject = new GameObject("text");
+                    textObject.transform.parent = textBoxObject.transform;
+                    textObject.transform.localPosition = new Vector3(0, 0, 0);
+
+                    var textComp = textObject.AddComponent<Text>();
+                    textComp.fontSize = 15;
+                    textComp.font = Resources.GetBuiltinResource(typeof(Font), "Arial.ttf") as Font;
+                    textComp.text = "";
+                    var rect2 = textObject.GetComponent<RectTransform>();
+                    rect2.pivot = new Vector2(0, 0);
+                    rect2.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, 600);
+                    rect2.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, 50);
+
+
+                    textIndex++;
+                    textTimer = 0;
+                }
+                else
+                {
+                    //maj du texte
+                    textTimer += Time.deltaTime;
+                    while (textTimer > textSpeed && textIndex <= currentDialog.Text.Length)
+                    {
+                        var textBoxObject = canvas.transform.Find("TextBox");
+                        var textComp = textBoxObject.GetComponentInChildren<Text>();
+
+                        textComp.text = currentDialog.Text.Substring(0, textIndex);
+
+                        textIndex++;
+                        textTimer -= textSpeed;
+                    }
+                }
+
+            } else
+            {
+                if (skip || !dialogConfirm)
+                {
+                    //pas de nouveau texte à lire
+                    dialogWriting = false;
+                } 
+
+                if ((dialogBoxQueue.Count > 1 && !dialogWriting) || nextDialog)
+                {
+                    //prochain texte
+                    textIndex = 0;
+                    dialogBoxQueue.Dequeue();
+                    var textBoxObject = canvas.transform.Find("TextBox");
+                    Destroy(textBoxObject.gameObject);
+                    dialogWriting = true;
+
+                    if (nextDialog)
+                    {
+                        nextDialog = false;
+                        updateTextBox(); //initialise le prochain dialogue
+                    }
+                }
+            }
+
+        }
+    }
+
+    private void logDamage(BattleEntityClient pokemon, int damage)
+    {
+        string log = string.Format("{0} subit {1} dégats.", pokemon.Pokemon.name, damage);
+        addLog(log);
+    }
+
+    private void logMove(BattleEntityClient pokemon, Move move)
+    {
+        string log = string.Format("{0} lance {1}", pokemon.Pokemon.name, move.ToString());
+        addLog(log);
+        addDialog(log);
+    }
+
+    private void logPokemonGo(BattleEntityClient pokemon)
+    {
+        string log = string.Format("{0} rejoint le combat", pokemon.Pokemon.name);
+        addLog(log);
+        addDialog(log);
+    }
+
+    private void logPokemonComeBack(BattleEntityClient pokemon)
+    {
+        string log = string.Format("{0} est rappelé", pokemon.Pokemon.name);
+        addLog(log);
+        addDialog(log);
+    }
+
+    private void logPokemonKO(BattleEntityClient pokemon)
+    {
+        string log = string.Format("{0} est KO.", pokemon.Pokemon.name);
+        addLog(log);
+        addDialog(log);
+    }
+
+    private void addLog(string log)
+    {
+        battleLog.Insert(0, log);
+        if (battleLog.Count > 10)
+        {
+            battleLog.RemoveAt(10);
+        }
+    }
+
+    private void dialogWhatDo(BattleEntityClient pokemon)
+    {
+        string dialog = string.Format("Que doit faire {0} ?", pokemon.Pokemon.name);
+        addDialog(dialog, false);
+    }
+
+    private void addDialog(string text)
+    {
+        dialogBoxQueue.Enqueue(new DialogMessage(text, true));
+    }
+
+    private void addDialog(string text, bool confirm)
+    {
+        dialogBoxQueue.Enqueue(new DialogMessage(text, confirm));
     }
 
     private void OnApplicationQuit()

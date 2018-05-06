@@ -31,9 +31,11 @@ public class ParticleGenerator : MonoBehaviour {
     private List<float> randoms;
     private float globalTime;
     
+    
     public ParticlePattern Pattern { get; set; }
     public string PrefabName { get; set; }
     public Vector3 Target { get; set; }
+    public bool Active { get; set; }
 
     void Awake()
     {
@@ -49,19 +51,23 @@ public class ParticleGenerator : MonoBehaviour {
         randoms = new List<float>();
         for (int i = 0; i < 1 + Pattern.Repeat; i++)
         {
-            timers.Add(-Pattern.Delay - Pattern.RepeatDelay * i);
+            timers.Add((1f / Pattern.Rate) - Pattern.Delay - Pattern.RepeatDelay * i);
             randoms.Add(Random.value);
         }
         globalTime = -Pattern.Delay;
+        Active = true;
     }
 	
 	// Update is called once per frame
 	void Update ()
     {
-        globalTime += Time.deltaTime;
-        for (int i = 0; i < 1 + Pattern.Repeat; i++)
+        if (Active)
         {
-            updateGenerator(i);
+            globalTime += Time.deltaTime;
+            for (int i = 0; i < 1 + Pattern.Repeat; i++)
+            {
+                updateGenerator(i);
+            }
         }
     }
 
@@ -85,16 +91,37 @@ public class ParticleGenerator : MonoBehaviour {
         while (timers[index] > rateTime && time < Pattern.Duration)
         {
             i--;
-            foreach (float angle in Pattern.ComputeAngles(time - reminder - rateTime * i, Target, randoms[index]))
+
+            if (Pattern.PatternType == ParticlePatternType.Projectile)
             {
-                var particuleObj = GameObject.Instantiate(Resources.Load(PrefabName)) as GameObject;
+                foreach (float angle in (Pattern as ProjectileParticlePattern).ComputeAngles(time - reminder - rateTime * i, Target, randoms[index]))
+                {
+                    var particuleObj = GameObject.Instantiate(Resources.Load("fxPrefab/" + PrefabName)) as GameObject;
+                    particuleObj.transform.parent = gameObject.transform;
+
+                    particuleObj.transform.localPosition = Pattern.ComputeCenter(time - reminder - rateTime * i, Target, randoms[index]);
+
+                    particuleObj.transform.localRotation = Quaternion.Euler(0, 0, Pattern.ComputeRotation(angle));
+
+                    var particule = new Particle(particuleObj, angle, (Pattern as ProjectileParticlePattern).ComputeSpeed(time - reminder - rateTime * i, randoms[index]), Pattern.ComputeScale(), Pattern.ComputeRotationSpeed(), Pattern.LifeTime);
+                    updateParticule(particule, reminder);
+                    if (i != 0)
+                    {
+                        updateParticule(particule, rateTime * i);
+                    }
+
+                    particules.Add(particule);
+                }
+            } else if (Pattern.PatternType == ParticlePatternType.Simple)
+            {
+                var particuleObj = GameObject.Instantiate(Resources.Load("fxPrefab/" + PrefabName)) as GameObject;
                 particuleObj.transform.parent = gameObject.transform;
 
                 particuleObj.transform.localPosition = Pattern.ComputeCenter(time - reminder - rateTime * i, Target, randoms[index]);
 
-                particuleObj.transform.localRotation = Quaternion.Euler(0, 0, Pattern.ComputeRotation());
+                particuleObj.transform.localRotation = Quaternion.Euler(0, 0, Pattern.ComputeRotation(0));
 
-                var particule = new Particle(particuleObj, angle, Pattern.ComputeSpeed(time - reminder - rateTime * i, randoms[index]), Pattern.ComputeScale(), Pattern.ComputeRotationSpeed(), Pattern.LifeTime);
+                var particule = new Particle(particuleObj, 0, 0, Pattern.ComputeScale(), Pattern.ComputeRotationSpeed(), Pattern.LifeTime);
                 updateParticule(particule, reminder);
                 if (i != 0)
                 {
@@ -130,7 +157,12 @@ public class ParticleGenerator : MonoBehaviour {
             part.Obj.transform.localScale = Vector3.one * scale;
 
             part.Obj.transform.Rotate(0, 0, deltaTime * part.RotationSpeed);
-            
+
+            if (Pattern.Color != Color.clear)
+            {
+                part.Obj.GetComponent<SpriteRenderer>().color = Pattern.Color;
+            }
+
             part.Time += deltaTime;
             if (part.Time > part.LifeTime)
             {

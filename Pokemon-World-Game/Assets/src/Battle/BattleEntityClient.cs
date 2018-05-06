@@ -7,11 +7,12 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-class BattleEntityClient : BattleEntity
+public class BattleEntityClient : BattleEntity
 {
     public GameObject Pokemon { get; set; }
 
     private float verticalOffset = 0.08f;
+    public float DamageAnimationTimer { get; set; }
 
     public BattleEntityClient(int id, int pokedexId, int playerId, int level) : base (id, pokedexId, playerId, level)
     {
@@ -22,6 +23,7 @@ class BattleEntityClient : BattleEntity
 
         Pokemon = pkmnObj;
         Pokemon.name = Pokedex.GetPokemonSheetByNationalId(pokedexId).Name;
+        DamageAnimationTimer = 0;
     }
     
     public void MoveBattleEntity(Position target, BattleArenaClient arena)
@@ -43,7 +45,8 @@ class BattleEntityClient : BattleEntity
         MaxMP = entity.MaxMP;
         APMP = entity.APMP;
         ComingBack = entity.ComingBack;
-        if (entity.ComingBack)
+        Ready = entity.Ready;
+        if (ComingBack)
         {
             Pokemon.SetActive(false);
         }

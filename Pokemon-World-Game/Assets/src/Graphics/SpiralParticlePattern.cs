@@ -5,7 +5,7 @@ using System.Text;
 using UnityEngine;
 
 
-class SpiralParticlePattern : ParticlePattern
+class SpiralParticlePattern : ProjectileParticlePattern
 {
     public float AngleRate { get; protected set; }
 

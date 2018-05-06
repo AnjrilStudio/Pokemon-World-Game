@@ -5,7 +5,7 @@ using System.Text;
 using UnityEngine;
 
 
-class EllipticParticlePattern : ParticlePattern
+class EllipticParticlePattern : ProjectileParticlePattern
 {
     public float RadiusX { get; protected set; }
     public float RadiusY { get; protected set; }

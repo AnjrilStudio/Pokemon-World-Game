@@ -5,13 +5,14 @@ using System.Text;
 using UnityEngine;
 
 
-class ProjectileArcParticlePattern : ProjectileParticlePattern
+class ProjectileArcParticlePattern : ProjectileParticlePattern //TODO changer d'héritage ou juste refaire le pattern ?
 {
     private float arcDist;
 
     public ProjectileArcParticlePattern(float arc):base()
     {
         arcDist = arc;
+        Speed = 0;
     }
 
     //TODO angles

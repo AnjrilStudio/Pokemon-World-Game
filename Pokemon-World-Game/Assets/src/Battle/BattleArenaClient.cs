@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-class BattleArenaClient : Arena
+public class BattleArenaClient : Arena
 {
     public float Tilesize { get; private set; }
     public GameObject[,] Tiles;
@@ -83,7 +83,8 @@ class BattleArenaClient : Arena
                         break;
                 }
                 obj.transform.parent = parentNode.transform;
-                obj.transform.position = new Vector3(Tilesize * i, -Tilesize * j, 0);
+                obj.transform.localPosition = new Vector3(Tilesize * i, -Tilesize * j, 0);
+                obj.transform.localScale = new Vector3(2, 2, 1);
                 Tiles[i, j] = obj;
                 TilesInt[i, j] = (int)tiles[i,j];
                 OverlayMatrix[i, j] = new List<GameObject>();

@@ -5,13 +5,14 @@ using Anjril.PokemonWorld.Common;
 public class fxTest : MonoBehaviour
 {
 
-    float timer = 0;
-    private Move move = Move.Gust;
+    float timer;
+    private Move move = Move.Tackle;
     private float repeat = 5f;
 
     // Use this for initialization
     void Start()
     {
+        timer = -1f;
     }
 
     // Update is called once per frame
@@ -30,6 +31,14 @@ public class fxTest : MonoBehaviour
                     var partgen = fxObj.AddComponent<ParticleGenerator>();
                     partgen.Pattern = fx.Pattern;
                     partgen.PrefabName = fx.PrefabName;
+                    if (fx.Type == FxType.FromTarget)
+                    {
+                        fxObj.transform.position = Vector3.right;
+                    }
+                    else if (fx.Type == FxType.ToTarget)
+                    {
+                        partgen.Target = Vector3.right;
+                    }
                 }
             }
 

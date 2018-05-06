@@ -25,16 +25,17 @@ class GroundFx
         {
             case GroundEffectOverTimeId.Gust:
                 FxDescriptor fxGust = new FxDescriptor("greydot3");
-                fxGust.Pattern = new VerticalEllipticParticlePattern(0.1f, 0.015f, -0.8f, -0.8f, 22f, -0.15f);
-                fxGust.Pattern.Scale = 0.07f;
-                fxGust.Pattern.Rate = 200f;
-                fxGust.Pattern.Speed = 0.07f;
-                fxGust.Pattern.LifeTime = 0.8f;
-                fxGust.Pattern.Duration = 1.2f;
-                fxGust.Pattern.Repeat = 10;
-                fxGust.Pattern.RepeatDelay = 0.20f;
-                fxGust.Pattern.RotationSpeed = 0f;
-                fxGust.Pattern.AddModifier(new OverTimeScaleModifier(0.07f, 0f));
+                var pattern = new VerticalEllipticParticlePattern(0.1f, 0.015f, -0.8f, -0.8f, 22f, -0.15f);
+                pattern.Scale = 0.07f;
+                pattern.Rate = 200f;
+                pattern.Speed = 0.07f;
+                pattern.LifeTime = 0.8f;
+                pattern.Duration = 1.2f;
+                pattern.Repeat = 10;
+                pattern.RepeatDelay = 0.20f;
+                pattern.RotationSpeed = 0f;
+                pattern.AddModifier(new OverTimeScaleModifier(0.07f, 0f));
+                fxGust.Pattern = pattern;
                 //fxGust.Pattern.AddModifier(new RandomRotationModifier());
                 fxGust.Type = FxType.FromTarget;
                 fx.Add(fxGust);
